@@ -3,8 +3,8 @@ defmodule Fluid.UserChannel do
   require Logger
 
   # Let User join lobby, then reply with user id so they can join a unique channel
-  def join("user:lobby", _msg, socket) do
-    {:ok, %{user_id: socket.id}, socket}
+  def join("user:lobby", _msg, %{id: id} = socket) do
+    {:ok, %{user_id: id}, socket}
   end
 
   # Join (optional message containing remote ID)
@@ -36,6 +36,7 @@ defmodule Fluid.UserChannel do
     case result do
       "accept" ->
         # Send to remote
+        IO.inspect(msg)
         send(self(), {:user_accepts, msg})
         {:noreply, socket}
       "denied" ->

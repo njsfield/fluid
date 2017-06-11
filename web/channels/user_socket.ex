@@ -11,7 +11,7 @@ defmodule Fluid.UserSocket do
 
   def connect(%{"name" => name}, socket) do
     socket = assign(socket, :name, name)
-    socket = assign(socket, :uid, Ecto.UUID.generate)
+    socket = assign(socket, :id, Ecto.UUID.generate)
     {:ok, socket}
   end
 
@@ -21,5 +21,5 @@ defmodule Fluid.UserSocket do
   end
 
   # Allow ID
-  def id(socket), do: socket.assigns.uid
+  def id(socket), do: socket.assigns.id
 end

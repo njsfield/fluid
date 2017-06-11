@@ -89,6 +89,7 @@ const joinUnique = (user_id) => {
         model.remote_id = msg.remote_id;
         model.state = "ACCEPTED"
         // Notify them
+
         unique.push("request:accept", {remote_id: msg.remote_id, name: model.name})
         // Update view
         output(model);
