@@ -10,9 +10,10 @@ defmodule Fluid.UserSocket do
   # Connect ->  assign name & generate unique ID
 
   def connect(%{"name" => name}, socket) do
-    socket = assign(socket, :name, name)
-    socket = assign(socket, :id, Ecto.UUID.generate)
-    {:ok, socket}
+    {:ok, socket
+      |> assign(:name, name)
+      |> assign(:id, Ecto.UUID.generate)
+    }
   end
 
   # Else

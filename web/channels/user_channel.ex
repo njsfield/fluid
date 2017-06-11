@@ -52,6 +52,20 @@ defmodule Fluid.UserChannel do
     {:noreply, socket}
   end
 
+  # # Handle msg (1st time)
+  # def handle_in({"msg" <> key, %{"remote_key" => remote_key, "remote_id" => remote_id} = msg}, socket) do
+  #   send(self(), {"msg" <> key, msg})
+  #   {:noreply, socket}
+  # end
+  # # Notify Remote that User has accepted
+  # def handle_info({"msg" <> key, %{"remote_key" => remote_key, "remote_id" => remote_id} = msg}, socket) do
+  #   # Broad to remote
+  #   socket
+  #   |> assign()
+  #   Fluid.Endpoint.broadcast("user:#{remote_id}", "msg:#{key}", msg)
+  #   {:noreply, socket}
+  # end
+
 
   def terminate(reason, _socket) do
     Logger.debug"> leave #{inspect reason}"
