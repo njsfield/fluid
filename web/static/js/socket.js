@@ -35,6 +35,10 @@ socket.connect();
 const channel = socket.channel(`user:${model.user_id}`, {})
 channel.join()
   .receive("ok", resp => {
+    // Set window url
+    window.history.replaceState('', '', '/' + model.user_id)
+    // Update state
+    model.state = 'READY FOR REMOTE';
     // Display output
     output();
     // Handle error
