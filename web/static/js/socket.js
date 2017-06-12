@@ -65,8 +65,10 @@ channel.on("msg:connect", msg => {
   window.alert(msg.name + ' would like to connect. Press ok to conect')
   // Set remote_id
   model.remote_id = msg.remote_id;
+  // Set remote name
+  model.remote_name = msg.name;
   // Send accept
-  channel.push("msg", {name: model.name, remote_id: model.remote_id })
+  channel.push("msg", {name: model.name, remote_id: model.remote_id})
   // Set state
   model.state = "IN CHAT";
   // Output
@@ -78,7 +80,7 @@ channel.on("msg:accept", msg => {
   // Alert Remote 
   window.alert(msg.name + ' has accepted')
   // Set remote name
-  model.remote_name = msg.remote_name;
+  model.remote_name = msg.name;
   // Send new msg
   channel.push("msg", {body: "hello"})
   // Set state

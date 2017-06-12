@@ -19,7 +19,6 @@ defmodule Fluid.UserSocket do
         {:ok, socket
           |> assign(:name, name)
           |> assign(:user_id, user_id)
-          |> assign(:remote_id, nil)
          }
       {:error, _} ->
         {:error, %{reason: "unauthenticated id"}}
