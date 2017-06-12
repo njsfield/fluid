@@ -1,6 +1,15 @@
-<div id="main">
-  <h2>Fluid</h2>
+<h2>Fluid</h2>
+
+  <!-- Main app output -->
   <div id="output">
     <!-- output -->
   </div>
-</div>
+
+<!-- Assign user token & user id globally -->
+  <script>
+    window.user_token = "<%= assigns[:user_token] %>"
+    window.user_id = "<%= assigns[:user_id] %>"
+  </script>
+
+<!-- Inject app -->
+<script src="<%= static_path(@conn, "/js/app.js") %>"></script>
