@@ -1,5 +1,8 @@
 defmodule Fluid.UserChannel do
   use Phoenix.Channel
+  alias Fluid.MyTracker
+  alias Fluid.Endpoint
+  alias Phoenix.Tracker
   require Logger
 
 
@@ -13,6 +16,8 @@ defmodule Fluid.UserChannel do
   # Users with ids only join dedicated subtopic 
   def join("user:" <> user_id, _msg, %{id: id} = socket) 
     when user_id == id do
+    # Track Topic & Socket 
+    Tracker.track(MyTracker, self(), "user:#{user_id}", id, %{stat: "here"})
     {:ok, socket}
   end
 
@@ -31,18 +36,26 @@ defmodule Fluid.UserChannel do
 
   # Request 
   def handle_in("request", %{"name" => name, "remote_id" => remote_id}, socket) do
-    # Broadcast to user
-    Fluid.Endpoint.broadcast("user:#{remote_id}", "request", %{
-      "name"    => name,
-      "user_id" => socket.id
-    }) 
-    {:noreply, assign(socket, :remote_id, remote_id)}
+    # Check socket is active
+    case (Tracker.list(MyTracker, "user:#{remote_id}")) do
+      [] ->
+        # Socket Unknown. Broadcast Deny
+        broadcast socket, "deny", %{"body" => "User unavailable"} 
+        {:noreply, socket}
+       _ ->
+        # Broadcast to remote & assign remote_id
+        Endpoint.broadcast("user:#{remote_id}", "request", %{
+          "name"    => name,
+          "user_id" => socket.id
+        }) 
+        {:noreply, assign(socket, :remote_id, remote_id)}
+    end
   end
 
   # Accept
   def handle_in("accept", %{"name" => name, "remote_id" => remote_id}, socket) do
     # Broadcast to remote 
-    Fluid.Endpoint.broadcast("user:#{remote_id}", "accept", %{
+    Endpoint.broadcast("user:#{remote_id}", "accept", %{
       "name"    => name
     })
     {:noreply, assign(socket, :remote_id, remote_id)}
@@ -51,7 +64,7 @@ defmodule Fluid.UserChannel do
   # Deny
   def handle_in("deny", %{"remote_id" => remote_id}, socket) do
     # Broadcast to remote 
-    Fluid.Endpoint.broadcast("user:#{remote_id}", "deny", %{
+    Endpoint.broadcast("user:#{remote_id}", "deny", %{
       "body"    => "User has denied to connect" 
     })
     {:noreply, socket}
@@ -60,7 +73,7 @@ defmodule Fluid.UserChannel do
   # Msg
   def handle_in("msg", %{"body" => body}, %{assigns: %{remote_id: remote_id}} = socket) do
     # Broadcast to user/remote (pass user_id from socket) 
-    Fluid.Endpoint.broadcast("user:#{remote_id}", "msg", %{
+    Endpoint.broadcast("user:#{remote_id}", "msg", %{
       "body"    => body, 
       "user_id" => socket.id 
     })
@@ -73,7 +86,7 @@ defmodule Fluid.UserChannel do
   # Terminate 
   def terminate(_reason, %{assigns: %{remote_id: remote_id, name: name}} = socket) do 
     # Broadcast to remote (pass this users id and name)
-    Fluid.Endpoint.broadcast("user:#{remote_id}", "leave", %{
+    Endpoint.broadcast("user:#{remote_id}", "leave", %{
       "user_id" => socket.id,
       "name"    => name
     })
@@ -95,13 +108,12 @@ defmodule Fluid.UserChannel do
 
   # Request User
   def handle_out("request", %{"user_id" => user_id} = msg, %{assigns: %{remote_id: remote_id}} = socket) do
-    IO.puts "++ SHould be called ++"
     if (is_nil(remote_id)) do
       # Pass request when User has no remote_id stored
       push socket, "request", msg
     else
       # If User has remote_id stored, broadcast back with deny
-      Fluid.Endpoint.broadcast("user:#{user_id}", "deny", %{
+      Endpoint.broadcast("user:#{user_id}", "deny", %{
         "body"    => "User is busy" 
       })
     end 

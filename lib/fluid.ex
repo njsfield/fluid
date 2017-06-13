@@ -1,5 +1,7 @@
 defmodule Fluid do
   use Application
+  
+  
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -13,7 +15,7 @@ defmodule Fluid do
       # Start the endpoint when the application starts
       supervisor(Fluid.Endpoint, []),
       # Start your own worker by calling: Fluid.Worker.start_link(arg1, arg2, arg3)
-      # worker(Fluid.Worker, [arg1, arg2, arg3]),
+      worker(Fluid.MyTracker, [[name: MyTracker, pubsub_server: Fluid.PubSub]])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
