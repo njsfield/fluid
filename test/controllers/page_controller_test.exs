@@ -3,6 +3,8 @@ defmodule Fluid.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get conn, "/"
-    assert html_response(conn, 200) =~ "Welcome to Phoenix!"
+    conn.assigns
+    assert Map.has_key?(conn.assigns, :user_id)
+    assert Map.has_key?(conn.assigns, :user_token)
   end
 end
