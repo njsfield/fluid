@@ -64,13 +64,22 @@ defmodule Fluid.UserChannel do
   # Ignore Others
   def handle_in(_topic, _msg, socket), do: {:noreply, socket}
 
+  # Terminate cases
+  def terminate(_reason, %{assigns: %{remote_id: remote_id, name: name}} = socket) do 
+    # Broadcast to remote (pass this users id and name)
+    Fluid.Endpoint.broadcast("user:#{remote_id}", "leave", %{
+      "user_id" => socket.id,
+      "name"    => name
+    })
+    :ok
+  end
 
 
   ### Outgoing 
   
 
 
-  intercept ["msg", "request", "accept", "deny"]
+  intercept ["msg", "request", "accept", "deny", "leave"]
 
   # Request (Idle User)
   # Only pass request when User has no remote_id stored
@@ -113,6 +122,15 @@ defmodule Fluid.UserChannel do
     {:noreply, socket}
   end
 
+  # Leave 
+  # Verify Remotes user_id matches remote_id stored in Users socket 
+  def handle_out("leave", %{"user_id" => user_id, "name" => name}, %{assigns: %{remote_id: remote_id}} = socket) 
+    when user_id == remote_id do 
+    # Push Msg
+    push socket, "leave", %{"body" => "#{name} has left"} 
+    {:noreply, assign(socket, :remote_id, nil)}
+  end
+  
   # Ignore others
   def handle_out(_topic, _msg, socket), do: {:noreply, socket}
 

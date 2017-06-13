@@ -78,27 +78,27 @@ channel.on("accept", msg => {
 
 // Handle deny (from user)
 channel.on("deny", msg => {
-  window.alert(msg.body)
-  window.history.replaceState('', '', '/')
-  model.remote_id = "";
-  model.state = "IDLE";
-  output();
+  resetHandler(msg)
 })
+
+// Receive message, reset state
+const resetHandler = (msg) => {
+  alert(msg.body)
+  model.state = "IDLE";
+  model.remote_id = "";
+  output();
+  window.history.replaceState('', '', '/' + model.user_id)
+  window.alert('Please share this url to chat')
+}
 
 // Handle new messages 
 channel.on("msg", msg => {
   window.alert(msg.body)
 })
 
-// Display Phoenix Errors 
-channel.on("phx_reply", msg => {
-  if (msg.status == "error") {
-    alert(msg.response.body)
-    model.state = "IDLE";
-    model.remote_id = "";
-    window.history.replaceState('', '', '/' + model.user_id)
-    window.alert('Please share this url to chat')
-  }
+// Handle leave
+channel.on("leave", msg => {
+  resetHandler(msg) 
 })
 
 export default socket
