@@ -1,22 +1,24 @@
 import {Socket} from "phoenix"
 
-// Extract user ID & token
+// Extract user ID & token (injected into view)
 const user_token = window.user_token;
-const user_id = window.user_id;
+const user_id    = window.user_id;
 
-// Store pathname if remote 
-const remote_path = window.location.pathname.slice(1) || false;
+// Store pathname (if remote) 
+const remote_path = 
+  window.location.pathname.slice(1) || false;
 
-// Append to DOM
+// Update DOM with model helper 
 const output = () => {
   document.querySelector("#output")
-    .innerHTML = JSON.stringify(model, null, 2)
+    .innerHTML = 
+      `<pre><code>${JSON.stringify(model, null, 2)}</code><pre>`
 }
 
-// 1. Get name
+// Get name
 const name = prompt('Enter your name');
 
-// Hold state
+// Model 
 const model = {
   name,
   user_id,
@@ -27,8 +29,13 @@ const model = {
 
 // Create socket, provide name & user_id
 const socket = new Socket("/socket", {
-  params: {name: model.name, user_token},
-  logger: ((kind, msg, data) => { console.log(`${kind}: ${msg}`, data) })
+  params: {
+    name: model.name, 
+    user_token
+  },
+  logger: ((kind, msg, data) => {
+    console.log(`${kind}: ${msg}`, data)
+  })
 })
 
 // Initial Connect
@@ -42,13 +49,16 @@ channel.join()
     if (remote_path) {
       model.remote_id = remote_path;
       model.state = 'MESSAGING REMOTE';
-      channel.push("request", {name: model.name, remote_id: model.remote_id})   
+      channel.push("request", {
+        name: model.name,
+        remote_id: model.remote_id
+      });   
       output();
     } else {
       // Set URL 
       window.history.replaceState('', '', '/' + model.user_id)
       window.alert('Please share this url to chat')
-      model.state = 'READY FOR REMOTE';
+      model.state = 'IDLE';
       output();
       }
     // On error
@@ -57,21 +67,25 @@ channel.join()
 
 // Handle connect (from remote) 
 channel.on("request", msg => {
-  window.alert(msg.name + ' would like to connect. Press ok to conect')
+  window.alert(`${msg.name} would like to connect. Press ok to conect`)
+  // Auto accept (for demo)
   model.remote_id = msg.user_id;
   model.remote_name = msg.name;
-  channel.push("accept", {name: model.name, remote_id: model.remote_id})
+  channel.push("accept", {
+    name: model.name, 
+    remote_id: model.remote_id
+  });
   model.state = "IN CHAT";
   output();
 })
 
 // Handle accept (from user) 
 channel.on("accept", msg => {
-  window.alert(msg.name + ' has accepted')
+  window.alert(msg.name + ' has accepted');
   model.remote_name = msg.name;
-  setTimeout(function(){
-    channel.push("msg", {body: "hello"})
-  },1000)
+  channel.push("msg", {
+    body: `hello ${model.remote_name}`
+  });
   model.state = "IN CHAT";
   output();
 })
@@ -81,9 +95,14 @@ channel.on("deny", msg => {
   resetHandler(msg)
 })
 
+// Handle leave
+channel.on("leave", msg => {
+  resetHandler(msg) 
+})
+
 // Receive message, reset state
 const resetHandler = (msg) => {
-  alert(msg.body)
+  alert(msg.body);
   model.state = "IDLE";
   model.remote_id = "";
   output();
@@ -96,9 +115,5 @@ channel.on("msg", msg => {
   window.alert(msg.body)
 })
 
-// Handle leave
-channel.on("leave", msg => {
-  resetHandler(msg) 
-})
 
 export default socket
