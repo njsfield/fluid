@@ -38,75 +38,67 @@ socket.connect();
 const channel = socket.channel(`user:${model.user_id}`, {})
 channel.join()
   .receive("ok", resp => {
-    // If remote
+    // If remote trying to join user
     if (remote_path) {
-      // Set remote id
       model.remote_id = remote_path;
-      // Update state
       model.state = 'MESSAGING REMOTE';
-      // Push msg
-      channel.push("msg", {name: model.name, remote_id: model.remote_id})   
-      // Display output
+      channel.push("request", {name: model.name, remote_id: model.remote_id})   
       output();
     } else {
-      // Update url
+      // Set URL 
       window.history.replaceState('', '', '/' + model.user_id)
-      // Update state
+      window.alert('Please share this url to chat')
       model.state = 'READY FOR REMOTE';
-      // Display output
       output();
       }
     // On error
-    }).receive("error", resp => { console.log("Unable to join", resp) })
+    }).receive("error", resp => {
+      console.log("Unable to join", resp)})
 
 // Handle connect (from remote) 
-channel.on("msg:connect", msg => {
-  // Alert User
+channel.on("request", msg => {
   window.alert(msg.name + ' would like to connect. Press ok to conect')
-  // Set remote_id
-  model.remote_id = msg.remote_id;
-  // Set remote name
+  model.remote_id = msg.user_id;
   model.remote_name = msg.name;
-  // Send accept
-  channel.push("msg", {name: model.name, remote_id: model.remote_id})
-  // Set state
+  channel.push("accept", {name: model.name, remote_id: model.remote_id})
   model.state = "IN CHAT";
-  // Output
   output();
 })
 
 // Handle accept (from user) 
-channel.on("msg:accept", msg => {
-  // Alert Remote 
+channel.on("accept", msg => {
   window.alert(msg.name + ' has accepted')
-  // Set remote name
   model.remote_name = msg.name;
-  // Send new msg
-  channel.push("msg", {body: "hello"})
-  // Set state
+  setTimeout(function(){
+    channel.push("msg", {body: "hello"})
+  },1000)
   model.state = "IN CHAT";
-  // Output
   output();
 })
 
-// Handle denied (from user)
-channel.on("msg:denied", msg => {
-  // Alert Remote
-  window.alert(msg.name + ' has denied')
-  // Reset window url
+// Handle deny (from user)
+channel.on("deny", msg => {
+  window.alert(msg.body)
   window.history.replaceState('', '', '/')
-  // Reset remote id
   model.remote_id = "";
-  // Reset state
   model.state = "IDLE";
-  // Output
   output();
 })
 
 // Handle new messages 
-channel.on("msg:new", msg => {
-  // Simply alert user of message
+channel.on("msg", msg => {
   window.alert(msg.body)
+})
+
+// Display Phoenix Errors 
+channel.on("phx_reply", msg => {
+  if (msg.status == "error") {
+    alert(msg.response.body)
+    model.state = "IDLE";
+    model.remote_id = "";
+    window.history.replaceState('', '', '/' + model.user_id)
+    window.alert('Please share this url to chat')
+  }
 })
 
 export default socket

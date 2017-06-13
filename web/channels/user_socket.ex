@@ -8,7 +8,7 @@ defmodule Fluid.UserSocket do
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
 
-  # 1. Connect 
+  # Connect 
   # Each socket provides name & ID (from token)
   # Token is verified, then params are assigned to socket
   # An additional remote_id is first assigned initially as 'nil'
@@ -19,17 +19,18 @@ defmodule Fluid.UserSocket do
         {:ok, socket
           |> assign(:name, name)
           |> assign(:user_id, user_id)
+          |> assign(:remote_id, nil)
          }
       {:error, _} ->
-        {:error, %{reason: "unauthenticated id"}}
+        :error
     end
   end
 
   def connect(_params, _socket) do
-    {:error, %{reason: "name & id must be provided"}}
+    :error
     
   end
 
-  # 2. Assign User ID as ID
+  # Assign User ID as ID
   def id(socket), do: socket.assigns.user_id
 end
