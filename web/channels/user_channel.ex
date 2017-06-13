@@ -108,7 +108,7 @@ defmodule Fluid.UserChannel do
 
   # Deny 
   def handle_out("deny", msg, %{assigns: %{remote_id: _remote_id}} = socket) do
-    # Send accept message 
+    # Send deny message 
     push socket, "deny", msg
     {:noreply, assign(socket, :remote_id, nil)}
   end
