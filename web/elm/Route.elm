@@ -5,11 +5,16 @@ import Model exposing (..)
 import UrlParser exposing (..)
 
 
+urlHash : Id
+urlHash =
+    "remote_id"
+
+
 setEntryPoint : Navigation.Location -> Model -> Model
 setEntryPoint location model =
     let
         parsedHash =
-            parseHash (s "remote_id" </> string) location
+            parseHash (s urlHash </> string) location
     in
         case parsedHash of
             Just remote_id ->
@@ -17,3 +22,8 @@ setEntryPoint location model =
 
             Nothing ->
                 model
+
+
+setUrlWithUserID : String -> Cmd msg
+setUrlWithUserID user_id =
+    Navigation.modifyUrl <| "/#" ++ urlHash ++ "/" ++ user_id

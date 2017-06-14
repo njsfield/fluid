@@ -3,6 +3,7 @@ module Data.Chat.System exposing (..)
 import Model exposing (..)
 import Task exposing (attempt, succeed, perform)
 import Regex exposing (HowMany(All), replace, regex)
+import Route exposing (setUrlWithUserID)
 import Storage
 
 

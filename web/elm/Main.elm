@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Html exposing (Html, div)
 import Navigation
-import Route exposing (setEntryPoint)
+import Route exposing (setEntryPoint, setUrlWithUserID)
 import Page.Chat.User as U
 import Page.Chat.System as S
 import Data.Chat.System as I
