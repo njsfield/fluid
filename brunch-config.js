@@ -10,7 +10,7 @@ const elmDebugSettings = Object.assign(
   { makeParameters: ["--debug"] }
 )
 
-const elmSettings = process.env.STAGING
+const elmSettings = process.env.DEBUG
   ? elmDebugSettings
   : baseElmSettings
 

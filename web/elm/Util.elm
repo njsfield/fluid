@@ -1,6 +1,7 @@
 module Util exposing (..)
 
 import Model exposing (..)
+import Regex exposing (contains, regex)
 
 
 {- TERNARY
@@ -58,3 +59,16 @@ empty val =
 end : Int -> String -> String
 end =
     String.right
+
+
+
+-- Validate a Users reply to system
+
+
+isValidSystemReply : String -> Bool
+isValidSystemReply val =
+    val
+        |> String.split " "
+        |> List.head
+        |> Maybe.withDefault ""
+        |> contains (regex "\\w\\.")

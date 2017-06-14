@@ -3,6 +3,7 @@ module Main exposing (..)
 import Html exposing (Html, program, div)
 import Page.Chat.User as U
 import Page.Chat.System as S
+import Data.Chat.System as I
 import Views.Chat
 import Model exposing (..)
 import Util exposing (..)
@@ -14,7 +15,7 @@ import Task exposing (succeed, perform)
 
 main =
     program
-        { init = baseModel ! [ assess ]
+        { init = baseModel ! [ initName ]
         , view = view
         , update = update
         , subscriptions = always Sub.none
@@ -23,8 +24,14 @@ main =
 
 assess : Cmd Msg
 assess =
-    succeed (System_ S.Assess)
+    succeed (System_ (S.Internal_ I.Assess))
         |> perform identity
+
+
+initName : Cmd Msg
+initName =
+    I.getNameFromStorage
+        |> Cmd.map (\i -> System_ (S.Internal_ i))
 
 
 
@@ -45,7 +52,7 @@ update msg model =
     case msg of
         User_ userMsg ->
             if userMsg == U.Complete then
-                update (System_ S.Assess) model
+                update (System_ (S.Internal_ I.Assess)) model
             else
                 U.update userMsg model
                     |> Tuple.mapSecond (Cmd.map User_)

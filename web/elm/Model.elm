@@ -43,18 +43,23 @@ type alias Model =
     , turn : Role
     , placeholder : String
     , tachs : Tachs
-    , state : State
+    , state : ( State, Val )
     }
 
 
 
--- State
+{- State
+   Representing different states in the application
+   Should used in a Tuple in the model alongside
+   a String representating the system Prompt
+   depending on the state.
+-}
 
 
 type State
-    = Initial Val
-    | NamePrompt Val
-    | MakingRoom Val
+    = Initial
+    | NamePrompt
+    | Welcome
 
 
 
@@ -68,7 +73,7 @@ baseModel =
     , turn = Open
     , placeholder = "Initialising..."
     , tachs = baseTachs
-    , state = Initial ""
+    , state = ( Initial, "Initialising" )
     }
 
 

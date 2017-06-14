@@ -1,5 +1,6 @@
 module Page.Chat.System exposing (..)
 
+import Data.Chat.System as I
 import Model exposing (..)
 import Util exposing (..)
 import Time exposing (millisecond, every)
@@ -8,7 +9,7 @@ import Task exposing (perform)
 
 
 type Msg
-    = Assess
+    = Internal_ I.Msg
     | SystemInput
 
 
@@ -19,66 +20,31 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Assess ->
-            (assess model)
-                |> update (SystemInput)
+        Internal_ internalMsg ->
+            if internalMsg == I.Complete then
+                update (SystemInput) { model | val = "" }
+            else
+                I.update internalMsg model
+                    |> Tuple.mapSecond (Cmd.map Internal_)
 
         SystemInput ->
             let
-                statement =
-                    getStatement model.state
+                ( _, statement ) =
+                    model.state
             in
                 if model.val == statement then
                     { model | turn = Open } ! []
                 else
-                    { model | val = addInput model.val statement } ! [ systemInput ]
+                    { model
+                        | val = addInput model.val statement
+                        , turn = System
+                        , tachs = baseTachs
+                    }
+                        ! [ systemInput ]
 
 
 
--- 1. Assess current model
-
-
-assess : Model -> Model
-assess model =
-    let
-        newState =
-            case model.state of
-                Initial _ ->
-                    NamePrompt "Hi. Please type your name."
-
-                NamePrompt _ ->
-                    MakingRoom "Welcome. Let's make a room."
-
-                MakingRoom _ ->
-                    MakingRoom ""
-    in
-        { model
-            | tachs = baseTachs
-            , val = ""
-            , turn = System
-            , state = newState
-        }
-
-
-
--- 2. Prepare statement from update state value
-
-
-getStatement : State -> Val
-getStatement state =
-    case state of
-        Initial val ->
-            val
-
-        NamePrompt val ->
-            val
-
-        MakingRoom val ->
-            val
-
-
-
--- 3. Calculate difference of current val to target statement
+-- 1. Calculate difference of current val to target statement
 
 
 addInput : Val -> Val -> Val
@@ -88,7 +54,7 @@ addInput val statement =
 
 
 
--- 4. Periodically send message to update
+-- 2. Periodically send message to update
 
 
 systemInput : Cmd Msg

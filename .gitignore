@@ -8,6 +8,7 @@
 # Generated on crash by the VM
 erl_crash.dump
 npm-debug.log
+.DS_Store
 
 # Static artifacts
 /node_modules

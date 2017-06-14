@@ -48,12 +48,37 @@ update msg model =
 
         UserInputBounced str ->
             if str == model.val then
-                { model | turn = Open } ! [ complete ]
+                { model | turn = Open } ! completeIfReady model
             else
                 model ! []
 
         _ ->
             model ! []
+
+
+
+{- completeIfReady
+   Only fire 'Complete'
+   when user input ends with '.'
+   AND state is NOT MakingRoom
+-}
+
+
+completeIfReady : Model -> List (Cmd Msg)
+completeIfReady { val, state } =
+    let
+        isValid =
+            isValidSystemReply val
+
+        initState =
+            case state of
+                ( Welcome, _ ) ->
+                    False
+
+                _ ->
+                    True
+    in
+        (isValid && initState) ? [ complete ] =:= []
 
 
 complete : Cmd Msg
