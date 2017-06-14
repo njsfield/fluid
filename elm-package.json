@@ -4,8 +4,7 @@
     "repository": "https://github.com/njsfield/fluid.git",
     "license": "BSD3",
     "source-directories": [
-        "web/elm",
-        "test/elm"
+        "web/elm"
     ],
     "exposed-modules": [],
     "native-modules": true,
