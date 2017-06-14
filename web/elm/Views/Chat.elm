@@ -3,7 +3,7 @@ module Views.Chat exposing (view)
 import Html exposing (Html, div, input, text)
 import Html.Attributes exposing (class, value, placeholder, style, autofocus)
 import Html.Events exposing (onInput)
-import Page.Chat.User exposing (..)
+import Roles.User exposing (Msg(..))
 import Model exposing (..)
 import Util exposing (..)
 

@@ -19,6 +19,14 @@ type alias Id =
     String
 
 
+type alias Name =
+    String
+
+
+type alias Statement =
+    String
+
+
 
 -- Role
 
@@ -43,11 +51,12 @@ type alias Tachs =
 
 type alias Model =
     { val : Val
+    , name : Name
     , rest : Ms
     , turn : Role
     , placeholder : String
     , tachs : Tachs
-    , state : ( State, Val )
+    , state : State
     , entry : Entry
     }
 
@@ -70,6 +79,10 @@ type State
     = Initial
     | NamePrompt
     | Welcome
+    | Connecting
+    | Idle
+    | Requesting
+    | InChat
 
 
 
@@ -80,10 +93,11 @@ baseModel : Model
 baseModel =
     { val = ""
     , rest = 1100
+    , name = ""
     , turn = Open
     , placeholder = "Initialising..."
     , tachs = baseTachs
-    , state = ( Initial, "Initialising" )
+    , state = Initial
     , entry = Creating
     }
 

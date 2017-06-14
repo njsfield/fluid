@@ -1,4 +1,4 @@
-module Page.Chat.User exposing (..)
+module Roles.User exposing (..)
 
 import Model exposing (..)
 import Util exposing (..)
@@ -72,7 +72,7 @@ completeIfReady { val, state } =
 
         initState =
             case state of
-                ( Welcome, _ ) ->
+                Welcome ->
                     False
 
                 _ ->
