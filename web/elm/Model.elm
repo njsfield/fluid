@@ -15,6 +15,10 @@ type alias Tach =
     String
 
 
+type alias Id =
+    String
+
+
 
 -- Role
 
@@ -44,7 +48,13 @@ type alias Model =
     , placeholder : String
     , tachs : Tachs
     , state : ( State, Val )
+    , entry : Entry
     }
+
+
+type Entry
+    = Joining String
+    | Creating
 
 
 
@@ -74,6 +84,7 @@ baseModel =
     , placeholder = "Initialising..."
     , tachs = baseTachs
     , state = ( Initial, "Initialising" )
+    , entry = Creating
     }
 
 

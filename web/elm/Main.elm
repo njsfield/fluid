@@ -1,6 +1,8 @@
 module Main exposing (..)
 
-import Html exposing (Html, program, div)
+import Html exposing (Html, div)
+import Navigation
+import Route exposing (setEntryPoint)
 import Page.Chat.User as U
 import Page.Chat.System as S
 import Data.Chat.System as I
@@ -13,9 +15,10 @@ import Task exposing (succeed, perform)
 -- MAIN
 
 
+main : Program Never Model Msg
 main =
-    program
-        { init = baseModel ! [ initName ]
+    Navigation.program UrlChange
+        { init = init
         , view = view
         , update = update
         , subscriptions = always Sub.none
@@ -26,6 +29,15 @@ assess : Cmd Msg
 assess =
     succeed (System_ (S.Internal_ I.Assess))
         |> perform identity
+
+
+init : Navigation.Location -> ( Model, Cmd Msg )
+init location =
+    let
+        model =
+            setEntryPoint location baseModel
+    in
+        model ! [ initName ]
 
 
 initName : Cmd Msg
@@ -41,6 +53,7 @@ initName =
 type Msg
     = User_ U.Msg
     | System_ S.Msg
+    | UrlChange Navigation.Location
 
 
 
@@ -60,6 +73,9 @@ update msg model =
         System_ systemMsg ->
             S.update systemMsg model
                 |> Tuple.mapSecond (Cmd.map System_)
+
+        UrlChange _ ->
+            model ! []
 
 
 
