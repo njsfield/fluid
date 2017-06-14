@@ -38,18 +38,49 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         User_ userMsg ->
-            if userMsg == U.Complete then
-                update (System_ S.Assess) model
-            else
-                U.update userMsg model
-                    |> Tuple.mapSecond (Cmd.map User_)
+            (isComplete userMsg)
+                ? (sysAssess model)
+                =:= (userUpdate userMsg model)
 
-        System_ systemMsg ->
-            S.update systemMsg model
-                |> Tuple.mapSecond (Cmd.map System_)
+        System_ sysMsg ->
+            (sysUpdate sysMsg model)
 
         UrlChange _ ->
             model ! []
+
+
+
+-- User Sent complete?
+
+
+isComplete : U.Msg -> Bool
+isComplete =
+    (==) U.Complete
+
+
+
+-- Update Mappers
+
+
+userUpdate : U.Msg -> Model -> ( Model, Cmd Msg )
+userUpdate msg model =
+    U.update msg model
+        |> Tuple.mapSecond (Cmd.map User_)
+
+
+sysUpdate : S.Msg -> Model -> ( Model, Cmd Msg )
+sysUpdate msg model =
+    S.update msg model
+        |> Tuple.mapSecond (Cmd.map System_)
+
+
+
+-- To System Assess
+
+
+sysAssess : Model -> ( Model, Cmd Msg )
+sysAssess model =
+    update (System_ S.Assess) model
 
 
 

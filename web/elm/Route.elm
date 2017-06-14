@@ -26,4 +26,8 @@ setEntryPoint location model =
 
 setUrlWithUserID : String -> Cmd msg
 setUrlWithUserID user_id =
-    Navigation.modifyUrl <| "/#" ++ urlHash ++ "/" ++ user_id
+    "/#"
+        ++ urlHash
+        ++ "/"
+        ++ user_id
+        |> Navigation.modifyUrl

@@ -8,34 +8,88 @@ import Model exposing (..)
 import Util exposing (..)
 
 
+-- Tach/Tachs types
+
+
+type alias Tach =
+    String
+
+
+type alias Tachs =
+    { container : Tach
+    , restedBg : Tach
+    , typingBg : Tach
+    , input : Tach
+    , typeCol : Tach
+    , restCol : Tach
+    , emptyCol : Tach
+    }
+
+
+
+-- baseTachs
+
+
+baseTachs : Tachs
+baseTachs =
+    { container = "vw-100 vh-100 pa3 flex items-center justify-center smooth"
+    , restedBg = "bg-gray"
+    , typingBg = "bg-white"
+    , input = "bt-0 br-0 bl-0 bw1 pa-1 lh-title w-100 mw6-ns bg-transparent outline-0 sans-serif smooth"
+    , typeCol = "black b--black"
+    , restCol = "0-30"
+    , emptyCol = "pl--grey black b--black"
+    }
+
+
+
 -- VIEW
 
 
 view : Model -> Html Msg
 view model =
-    div [ class <| containerStyle model ]
-        [ input
-            [ class <| inputStyle model
-            , placeholder model.placeholder
-            , autofocus True
-            , onInput UserInput
-            , value model.val
+    let
+        tachs =
+            setTachs model.turn
+    in
+        div [ class <| containerStyle model tachs ]
+            [ input
+                [ class <| inputStyle model tachs
+                , placeholder model.placeholder
+                , autofocus True
+                , onInput UserInput
+                , value model.val
+                ]
+                []
             ]
-            []
-        ]
 
 
 
 -- INTERAL
 
 
-rest : Model -> Tach
-rest { turn, val, tachs } =
+setTachs : Role -> Tachs
+setTachs turn =
+    case turn of
+        User ->
+            { baseTachs
+                | restedBg = "bg-gray"
+                , typingBg = "bg-blue"
+                , typeCol = "white b--white"
+                , emptyCol = "pl--black white b--black"
+            }
+
+        _ ->
+            baseTachs
+
+
+rest : Model -> Tachs -> Tach
+rest { turn, val } tachs =
     (turn == Open && len val /= 0) ? tachs.restCol =:= ""
 
 
-colour : Model -> Tach
-colour { val, tachs } =
+colour : Model -> Tachs -> Tach
+colour { val } tachs =
     empty val ? tachs.emptyCol =:= tachs.typeCol
 
 
@@ -50,16 +104,18 @@ size { val } =
         |> (++) "f"
 
 
-inputStyle : Model -> Tach
-inputStyle model =
-    [ rest model
-    , colour model
+inputStyle : Model -> Tachs -> Tach
+inputStyle model tachs =
+    [ rest model tachs
+    , colour model tachs
     , size model
-    , model.tachs.input
+    , tachs.input
     ]
         |> String.join " "
 
 
-containerStyle : Model -> Tach
-containerStyle { tachs, turn } =
-    tachs.container ++ " " ++ ((turn == Open) ? tachs.restedBg =:= tachs.typingBg)
+containerStyle : Model -> Tachs -> Tach
+containerStyle { turn } tachs =
+    tachs.container
+        |> (^+) " "
+        |> (^+) ((turn == Open) ? tachs.restedBg =:= tachs.typingBg)

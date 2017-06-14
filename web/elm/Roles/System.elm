@@ -78,12 +78,12 @@ update msg model =
                     mapStateToStatement model.state model.name
             in
                 if model.val == statement then
-                    { model | turn = Open } ! []
+                    { model | turn = Open, placeholder = "" }
+                        ! []
                 else
                     { model
                         | val = addInput model.val statement
                         , turn = System
-                        , tachs = baseTachs
                     }
                         ! [ systemInput ]
 

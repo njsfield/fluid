@@ -7,21 +7,6 @@ import Process exposing (sleep)
 import Time exposing (millisecond)
 
 
--- USER TACHS
-
-
-tachs : Tachs
-tachs =
-    { baseTachs
-        | restedBg = "bg-gray"
-        , typingBg = "bg-blue"
-        , typeCol = "white b--white"
-        , restCol = "o-30"
-        , emptyCol = "pl--black white b--black"
-    }
-
-
-
 -- USER MSG
 
 
@@ -40,8 +25,7 @@ update msg model =
     case msg of
         UserInput str ->
             { model
-                | tachs = tachs
-                , turn = User
+                | turn = User
                 , val = reset str model
             }
                 ! [ debounce model.rest <| reset str model ]

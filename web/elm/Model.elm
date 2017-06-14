@@ -11,10 +11,6 @@ type alias Ms =
     Float
 
 
-type alias Tach =
-    String
-
-
 type alias Id =
     String
 
@@ -38,24 +34,12 @@ type Role
     | Open
 
 
-type alias Tachs =
-    { container : Tach
-    , restedBg : Tach
-    , typingBg : Tach
-    , input : Tach
-    , typeCol : Tach
-    , restCol : Tach
-    , emptyCol : Tach
-    }
-
-
 type alias Model =
     { val : Val
     , name : Name
     , rest : Ms
     , turn : Role
     , placeholder : String
-    , tachs : Tachs
     , state : State
     , entry : Entry
     }
@@ -96,19 +80,6 @@ baseModel =
     , name = ""
     , turn = Open
     , placeholder = "Initialising..."
-    , tachs = baseTachs
     , state = Initial
     , entry = Creating
-    }
-
-
-baseTachs : Tachs
-baseTachs =
-    { container = "vw-100 vh-100 pa3 flex items-center justify-center smooth"
-    , restedBg = "bg-green"
-    , typingBg = "bg-green"
-    , input = "bt-0 br-0 bl-0 bw1 pa-1 lh-title w-100 mw6-ns bg-transparent outline-0 sans-serif smooth"
-    , typeCol = "white b--white"
-    , restCol = ""
-    , emptyCol = "pl--black black b--black"
     }
