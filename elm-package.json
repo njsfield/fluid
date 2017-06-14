@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "summary": "Fluid type",
-    "repository": "https://github.com/njsfield/fluid-type.git",
+    "summary": "Fluid",
+    "repository": "https://github.com/njsfield/fluid.git",
     "license": "BSD3",
     "source-directories": [
         "web/elm"

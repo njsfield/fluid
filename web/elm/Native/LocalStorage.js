@@ -1,6 +1,6 @@
 //import Maybe, Native.Scheduler //
 
-var _njsfield$fluid_type$Native_LocalStorage = function() {
+var _njsfield$fluid$Native_LocalStorage = function() {
 
   function get (key) {
     return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback) {
