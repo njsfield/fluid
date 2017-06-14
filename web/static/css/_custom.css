@@ -1,0 +1,12 @@
+/** Resets **/
+
+body {margin:0;padding:0;}
+
+/** Mobile Font-Scale **/
+@media screen and (max-width: 30em) {html{font-size: 3vw;}}
+
+/** Transition **/ 
+.smooth {transition: all .3s ease;}
+
+/** Extra **/
+input.pl--black::-webkit-input-placeholder {color:black;}

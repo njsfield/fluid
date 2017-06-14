@@ -1,15 +1,7 @@
-<h2>Fluid</h2>
+ <div id="main"> <!-- Elm output --></div>
 
-  <!-- Main app output -->
-  <div id="output">
-    <!-- output -->
-  </div>
-
-<!-- Assign user token & user id globally -->
-  <script>
+  <!-- <script>
     window.user_token = "<%= assigns[:user_token] %>"
     window.user_id = "<%= assigns[:user_id] %>"
   </script>
-
-<!-- Inject app -->
-<script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+  -->
