@@ -58,6 +58,7 @@ type Entry
 
 type State
     = SystemType_Initialize
+    | SystemType_Introduction
     | SystemType_NamePrompt
     | UserType_Name
     | SystemAction_SaveName

@@ -33,7 +33,7 @@ type alias Tachs =
 baseTachs : Tachs
 baseTachs =
     { container = "vw-100 vh-100 pa3 flex items-center justify-center smooth"
-    , restedBg = "bg-gray"
+    , restedBg = ""
     , typingBg = "bg-white"
     , input = "bt-0 br-0 bl-0 bw1 pa-1 lh-title w-100 mw6-ns bg-transparent outline-0 sans-serif smooth"
     , typeCol = "black b--black"

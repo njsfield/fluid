@@ -117,27 +117,31 @@ assess : Model -> ( Model, Cmd Msg )
 assess model =
     -- First check state
     case model.state of
-        -- 1. System has
+        -- 1. System type initialise
         SystemType_Initialize ->
-            { model | state = SystemType_NamePrompt } ! [ sysInput ]
+            { model | state = SystemType_Introduction } ! [ sysInput ]
 
-        -- 2. Save name (with val)
+        -- 2. System type introduction
+        SystemType_Introduction ->
+            { model | val = "", state = SystemType_NamePrompt } ! [ sysInput ]
+
+        -- 3. Save name (with val)
         SystemType_NamePrompt ->
             { model | val = "", state = UserType_Name } ! []
 
-        -- 3. Save name (with val)
+        -- 4. Save name (with val)
         UserType_Name ->
             { model | state = SystemAction_SaveName } ! [ saveNameToStorage (noStop model.val) ]
 
-        -- 4 (a). System should type Welcome after saving
+        -- 5 (a). System should type Welcome after saving
         SystemAction_SaveName ->
             { model | val = "", name = model.val, state = SystemType_Welcome } ! [ sysInput ]
 
-        -- 4 (b). System should type Welcome after loading
+        -- 6 (b). System should type Welcome after loading
         SystemAction_LoadName ->
             { model | name = model.val, state = SystemType_Welcome } ! [ sysInput ]
 
-        -- 5. System should
+        -- 7. System should
         SystemType_Welcome ->
             { model | name = model.val, state = SystemType_Connect } ! []
 

@@ -24,6 +24,7 @@ type Msg
 
 statements =
     { initial = "Initialising..."
+    , introduction = "Hi there. Welcome to Fluid. Lets begin..."
     , namePrompt = "Please enter your first name, followed by a ."
     , loadedFromStorage = "Welcome, I will now load your name"
     , savingToStorage = "Welcome, I will now save your name"
@@ -36,6 +37,9 @@ mapStateToStatement state name =
     case state of
         SystemType_Initialize ->
             statements.initial
+
+        SystemType_Introduction ->
+            statements.introduction
 
         SystemType_NamePrompt ->
             statements.namePrompt
