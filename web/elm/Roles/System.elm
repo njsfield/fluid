@@ -14,10 +14,8 @@ import Storage
 
 
 type Msg
-    = SystemInput
-    | Assess
-    | Complete
-    | LoadName (Maybe Val)
+    = SystemType
+    | SystemFinishedTyping
 
 
 
@@ -36,13 +34,13 @@ statements =
 mapStateToStatement : State -> Name -> Statement
 mapStateToStatement state name =
     case state of
-        Initial ->
+        SystemType_Initialize ->
             statements.initial
 
-        NamePrompt ->
+        SystemType_NamePrompt ->
             statements.namePrompt
 
-        Welcome ->
+        SystemType_Welcome ->
             statements.welcome
                 |> replace All (regex "##") (\_ -> String.dropRight 1 name)
 
@@ -57,35 +55,32 @@ mapStateToStatement state name =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Assess ->
-            assess model
-
-        Complete ->
-            { model | val = "" } ! [ systemInput ]
-
-        LoadName maybeName ->
-            case maybeName of
-                Just name ->
-                    { model | val = name, name = name, state = Welcome }
-                        |> update (Assess)
-
-                Nothing ->
-                    update (Assess) model
-
-        SystemInput ->
+        SystemType ->
+            -- Prepare Statement
             let
                 statement =
                     mapStateToStatement model.state model.name
             in
+                -- Check if input val is complete statement
                 if model.val == statement then
-                    { model | turn = Open, placeholder = "" }
-                        ! []
-                else
+                    -- If it is then set turn to open (for user to type)
+                    -- Then send systemComplete
                     { model
-                        | val = addInput model.val statement
-                        , turn = System
+                        | turn = Open
+                        , placeholder = ""
                     }
-                        ! [ systemInput ]
+                        ! [ systemFinishedTyping ]
+                else
+                    -- Otherwise add input
+                    -- Call system input repeatedly
+                    { model
+                        | turn = System
+                        , val = addInput model.val statement
+                    }
+                        ! [ systemType ]
+
+        _ ->
+            model ! []
 
 
 
@@ -102,63 +97,18 @@ addInput val statement =
 -- 2. Periodically send message to update
 
 
-systemInput : Cmd Msg
-systemInput =
+systemType : Cmd Msg
+systemType =
     sleep (100 * millisecond)
-        |> perform (always (SystemInput))
+        |> perform (always (SystemType))
 
 
 
--- Storage Events (Cmds)
+-- System finished typing statement,
+-- Send Complete Msg (after short delay)
 
 
-getNameFromStorage : Cmd Msg
-getNameFromStorage =
-    Storage.get "name"
-        |> attempt
-            (\res ->
-                case res of
-                    Ok name ->
-                        LoadName name
-
-                    Err _ ->
-                        LoadName Nothing
-            )
-
-
-saveNameToStorage : Name -> Cmd Msg
-saveNameToStorage name =
-    Storage.set "name" name
-        |> attempt (always Assess)
-
-
-
--- Final complete Cmd
-
-
-complete : Cmd Msg
-complete =
-    succeed Complete
-        |> perform identity
-
-
-
-{-
-   1. assess
--}
-
-
-assess : Model -> ( Model, Cmd Msg )
-assess model =
-    case model.state of
-        Initial ->
-            { model | state = NamePrompt } ! [ complete ]
-
-        NamePrompt ->
-            { model | state = Welcome } ! [ saveNameToStorage model.val ]
-
-        Welcome ->
-            { model | name = model.val, state = Welcome } ! [ complete ]
-
-        _ ->
-            model ! []
+systemFinishedTyping : Cmd Msg
+systemFinishedTyping =
+    sleep (1000 * millisecond)
+        |> perform (always (SystemFinishedTyping))

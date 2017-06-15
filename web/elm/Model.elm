@@ -52,20 +52,18 @@ type Entry
 
 
 {- State
-   Representing different states in the application
-   Should used in a Tuple in the model alongside
-   a String representating the system Prompt
-   depending on the state.
+   Representing different states in the application.
 -}
 
 
 type State
-    = Initial
-    | NamePrompt
-    | Welcome
-    | Connecting
-    | Idle
-    | Requesting
+    = SystemType_Initialize
+    | SystemType_NamePrompt
+    | UserType_Name
+    | SystemAction_SaveName
+    | SystemAction_LoadName
+    | SystemType_Welcome
+    | SystemType_Connect
     | InChat
 
 
@@ -80,6 +78,6 @@ baseModel =
     , name = ""
     , turn = Open
     , placeholder = "Initialising..."
-    , state = Initial
+    , state = SystemType_Initialize
     , entry = Creating
     }

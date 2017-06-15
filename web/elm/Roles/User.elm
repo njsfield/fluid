@@ -11,9 +11,9 @@ import Time exposing (millisecond)
 
 
 type Msg
-    = UserInput Val
-    | UserInputBounced String
-    | Complete
+    = UserType Val
+    | UserTypeBounced String
+    | UserFinishedTyping
 
 
 
@@ -23,14 +23,14 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        UserInput str ->
+        UserType str ->
             { model
                 | turn = User
                 , val = reset str model
             }
                 ! [ debounce model.rest <| reset str model ]
 
-        UserInputBounced str ->
+        UserTypeBounced str ->
             if str == model.val then
                 { model | turn = Open } ! completeIfReady model
             else
@@ -56,18 +56,18 @@ completeIfReady { val, state } =
 
         initState =
             case state of
-                Welcome ->
+                InChat ->
                     False
 
                 _ ->
                     True
     in
-        (isValid && initState) ? [ complete ] =:= []
+        (isValid && initState) ? [ userFinishedTyping ] =:= []
 
 
-complete : Cmd Msg
-complete =
-    succeed Complete
+userFinishedTyping : Cmd Msg
+userFinishedTyping =
+    succeed UserFinishedTyping
         |> perform identity
 
 
@@ -79,4 +79,4 @@ reset val { turn } =
 debounce : Ms -> Val -> Cmd Msg
 debounce ms val =
     sleep (ms * millisecond)
-        |> perform (always (UserInputBounced val))
+        |> perform (always (UserTypeBounced val))

@@ -57,7 +57,7 @@ view model =
                 [ class <| inputStyle model tachs
                 , placeholder model.placeholder
                 , autofocus True
-                , onInput UserInput
+                , onInput UserType
                 , value model.val
                 ]
                 []
