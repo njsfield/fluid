@@ -42,7 +42,7 @@ mapStateToStatement state name =
 
         SystemType_Welcome ->
             statements.welcome
-                |> replace All (regex "##") (\_ -> String.dropRight 1 name)
+                |> replace All (regex "##") (\_ -> noStop name)
 
         _ ->
             ""

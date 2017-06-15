@@ -64,22 +64,6 @@ update msg model =
             model ! []
 
 
-
--- Update Mappers
---
--- userUpdate : U.Msg -> Model -> ( Model, Cmd Msg )
--- userUpdate msg model =
---     U.update msg model
---         |> Tuple.mapSecond (Cmd.map User_)
---
---
--- sysUpdate : S.Msg -> Model -> ( Model, Cmd Msg )
--- sysUpdate msg model =
---     S.update msg model
---         |> Tuple.mapSecond (Cmd.map System_)
--- Storage Events (Cmds)
-
-
 getNameFromStorage : Cmd Msg
 getNameFromStorage =
     Storage.get "name"
@@ -143,7 +127,7 @@ assess model =
 
         -- 3. Save name (with val)
         UserType_Name ->
-            { model | state = SystemAction_SaveName } ! [ saveNameToStorage model.val ]
+            { model | state = SystemAction_SaveName } ! [ saveNameToStorage (noStop model.val) ]
 
         -- 4 (a). System should type Welcome after saving
         SystemAction_SaveName ->

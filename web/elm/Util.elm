@@ -72,3 +72,8 @@ isValidSystemReply val =
         |> List.head
         |> Maybe.withDefault ""
         |> contains (regex "\\w\\.")
+
+
+noStop : String -> String
+noStop str =
+    (String.right 1 str == ".") ? (String.dropRight 1 str) =:= str
