@@ -30,6 +30,7 @@ type Msg
     | System_ S.Msg
     | UrlChange Navigation.Location
     | Assess
+    | SendMsg Val
     | LoadName (Maybe Val)
 
 
@@ -51,6 +52,7 @@ update msg model =
                 ? (update Assess model)
                 =:= (U.update userMsg model
                         |> Tuple.mapSecond (Cmd.map User_)
+                        |> Tuple.mapSecond (sendIfTyping userMsg)
                     )
 
         System_ sysMsg ->
@@ -62,6 +64,10 @@ update msg model =
 
         UrlChange _ ->
             model ! []
+
+        SendMsg str ->
+            Debug.log "Sent:" str
+                |> always (model ! [])
 
 
 getNameFromStorage : Cmd Msg
@@ -131,7 +137,9 @@ assess model =
 
         -- 4. Save name (with val)
         UserType_Name ->
-            { model | state = SystemAction_SaveName } ! [ saveNameToStorage (noStop model.val) ]
+            (isValidSystemReply model.val)
+                ? ({ model | state = SystemAction_SaveName } ! [ saveNameToStorage (noStop model.val) ])
+                =:= (model ! [])
 
         -- 5 (a). System should type Welcome after saving
         SystemAction_SaveName ->
@@ -157,6 +165,34 @@ sysInput : Cmd Msg
 sysInput =
     succeed (System_ S.SystemType)
         |> perform identity
+
+
+userType : U.Msg -> Bool
+userType msg =
+    case msg of
+        U.UserType _ ->
+            True
+
+        _ ->
+            False
+
+
+
+-- If User is typing, batch cmd with
+-- both cmd & SendMsg
+
+
+sendIfTyping : U.Msg -> Cmd Msg -> Cmd Msg
+sendIfTyping msg cmd =
+    case msg of
+        U.UserType s ->
+            succeed (SendMsg s)
+                |> perform identity
+                |> flip (::) [ cmd ]
+                |> Cmd.batch
+
+        _ ->
+            cmd
 
 
 

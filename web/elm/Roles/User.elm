@@ -31,38 +31,10 @@ update msg model =
                 ! [ debounce model.rest <| reset str model ]
 
         UserTypeBounced str ->
-            if str == model.val then
-                { model | turn = Open } ! completeIfReady model
-            else
-                model ! []
+            model ! ((str == model.val) ? [ userFinishedTyping ] =:= [])
 
         _ ->
             model ! []
-
-
-
-{- completeIfReady
-   Only fire 'Complete'
-   when user input ends with '.'
-   AND state is NOT MakingRoom
--}
-
-
-completeIfReady : Model -> List (Cmd Msg)
-completeIfReady { val, state } =
-    let
-        isValid =
-            isValidSystemReply val
-
-        initState =
-            case state of
-                InChat ->
-                    False
-
-                _ ->
-                    True
-    in
-        (isValid && initState) ? [ userFinishedTyping ] =:= []
 
 
 userFinishedTyping : Cmd Msg
