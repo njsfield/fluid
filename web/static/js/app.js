@@ -1,6 +1,8 @@
 // import socket from "./socket"
 
 // Embed main elm app
-if (window.Elm) { 
-  Elm.Main.embed(document.getElementById('main'))
+if (window.Elm && window.user_id) { 
+  Elm.Main.embed(document.getElementById('main'), {
+    user_id: window.user_id
+  })
 }

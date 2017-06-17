@@ -12,13 +12,13 @@ import Util exposing (..)
 import Task exposing (succeed, perform, attempt)
 
 
-init : Navigation.Location -> ( Model, Cmd Msg )
-init location =
+init : Flags -> Navigation.Location -> ( Model, Cmd Msg )
+init { user_id } location =
     let
         model =
             setEntryPoint location baseModel
     in
-        model ! [ getNameFromStorage ]
+        { model | user_id = user_id } ! [ getNameFromStorage ]
 
 
 

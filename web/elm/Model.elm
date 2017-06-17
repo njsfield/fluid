@@ -1,5 +1,14 @@
 module Model exposing (..)
 
+-- Input Flags
+
+
+type alias Flags =
+    { user_id : String
+    }
+
+
+
 -- Types
 
 
@@ -37,6 +46,7 @@ type Role
 type alias Model =
     { val : Val
     , name : Name
+    , user_id : String
     , rest : Ms
     , turn : Role
     , placeholder : String
@@ -77,6 +87,7 @@ baseModel =
     { val = ""
     , rest = 1100
     , name = ""
+    , user_id = ""
     , turn = Open
     , placeholder = "Initialising..."
     , state = SystemType_Initialize

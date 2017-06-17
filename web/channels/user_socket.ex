@@ -1,6 +1,5 @@
 defmodule Fluid.UserSocket do
   use Phoenix.Socket
-  alias Phoenix.Token
 
   ## Channels
   channel "user:*", Fluid.UserChannel
@@ -10,20 +9,15 @@ defmodule Fluid.UserSocket do
 
   # Connect 
   # Each socket provides name & ID (from token)
-  # Token is verified, then params are assigned to socket
+  # Then params are assigned to socket
   # An additional remote_id is first assigned initially as 'nil'
 
-  def connect(%{"user_token" => user_token, "name" => name}, socket) do
-    case Token.verify(socket, "user_token", user_token) do
-      {:ok, user_id} -> 
-        {:ok, socket
-          |> assign(:name, name)
-          |> assign(:user_id, user_id)
-          |> assign(:remote_id, nil)
-         }
-      {:error, _} ->
-        :error
-    end
+  def connect(%{"user_id" => user_id, "name" => name}, socket) do
+    {:ok, socket
+      |> assign(:name, name)
+      |> assign(:user_id, user_id)
+      |> assign(:remote_id, nil)
+    }
   end
 
   def connect(_params, _socket) do
