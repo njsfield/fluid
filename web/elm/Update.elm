@@ -95,6 +95,9 @@ update msg model =
             Debug.log "Sent:" str
                 |> always (model ! [])
 
+        _ ->
+            model ! []
+
 
 
 -- attempt to get name from storage

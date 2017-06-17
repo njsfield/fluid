@@ -92,7 +92,7 @@ type State
 
 
 
--- Types
+-- Global Msg
 
 
 type Msg
@@ -102,6 +102,7 @@ type Msg
     | Assess
     | SendMsg Val
     | LoadName (Maybe Val)
+    | JoinChannel
 
 
 
