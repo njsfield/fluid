@@ -10,6 +10,8 @@ import Views.Chat
 import Phoenix.Socket
 import Phoenix.Channel
 import Phoenix.Push
+import Json.Encode as JE
+import Json.Decode as JD
 import Model exposing (..)
 import Util exposing (..)
 import Task exposing (succeed, perform, attempt)
