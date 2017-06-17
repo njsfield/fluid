@@ -41,12 +41,20 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        -- Global assess, used to cycle through state
         Assess ->
             assess model
 
+        -- Called on load
+        -- (after getting name from local storage)
+        -- Leads to assess
         LoadName maybeName ->
             maybeStartFromWelcome maybeName model
 
+        -- When User sends message
+        -- Mainly for typing, if they send UserFinishedTyping
+        -- assess is called.
+        -- Otherwise map (and call SendMsg if typing)
         User_ userMsg ->
             (userMsg == U.UserFinishedTyping)
                 ? (update Assess model)
@@ -54,6 +62,9 @@ update msg model =
                         |> Tuple.mapSecond (Cmd.map User_ >> (sendIfTyping userMsg))
                     )
 
+        -- When System sends message
+        -- Mainly for typing, if they send SystemFinishedTyping
+        -- assess is called.
         System_ sysMsg ->
             (sysMsg == S.SystemFinishedTyping)
                 ? (update Assess model)
@@ -61,12 +72,20 @@ update msg model =
                         |> Tuple.mapSecond (Cmd.map System_)
                     )
 
+        -- Called after URL change action
         UrlChange _ ->
             (update Assess model)
 
+        -- SendMsg via socket
         SendMsg str ->
+            -- Replace with state checking function before sending
             Debug.log "Sent:" str
                 |> always (model ! [])
+
+
+
+-- attempt to get name from storage
+-- Call LoadName with Maybe after
 
 
 getNameFromStorage : Cmd Msg
@@ -81,6 +100,10 @@ getNameFromStorage =
                     Err _ ->
                         LoadName Nothing
             )
+
+
+
+-- Save name, call Assess after
 
 
 saveNameToStorage : Name -> Cmd Msg
@@ -130,11 +153,11 @@ assess model =
         SystemType_Introduction ->
             { model | val = "", state = SystemType_NamePrompt } ! [ sysInput ]
 
-        -- 3. Save name (with val)
+        -- 3. After system asked for name
         SystemType_NamePrompt ->
             { model | val = "", state = UserType_Name } ! []
 
-        -- 4. Save name (with val)
+        -- 4. After user has typed name (if valid) then send name
         UserType_Name ->
             (isValidSystemReply model.val)
                 ? ({ model | state = SystemAction_SaveName } ! [ saveNameToStorage (noStop model.val) ])
@@ -148,7 +171,7 @@ assess model =
         SystemAction_LoadName ->
             { model | name = model.val, state = SystemType_Welcome } ! [ sysInput ]
 
-        -- 7. After welcome, set url (if creating room)
+        -- 7. After welcome, set Url (if creating room)
         SystemType_Welcome ->
             if (model.entry == Creating) then
                 { model | val = "", state = SystemAction_SetUrl } ! [ setUrlWithUserID model.user_id ]
