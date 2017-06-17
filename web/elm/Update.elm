@@ -30,6 +30,7 @@ baseModel =
     , placeholder = "Initialising..."
     , state = SystemType_Initialize
     , entry = Creating
+    , socket = Nothing
     }
 
 

@@ -1,6 +1,7 @@
 module Types exposing (..)
 
 import Navigation
+import Phoenix.Socket
 
 
 -- Input Flags
@@ -59,6 +60,7 @@ type alias Model =
     , placeholder : String
     , state : State
     , entry : Entry
+    , socket : Maybe (Phoenix.Socket.Socket Msg)
     }
 
 
