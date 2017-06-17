@@ -41,11 +41,17 @@ baseModel =
 
 init : Flags -> Navigation.Location -> ( Model, Cmd Msg )
 init { user_id, socket_url } location =
+    -- Set Entry Point (Joining / Creating)
     let
         model =
             setEntryPoint location baseModel
     in
-        { model | user_id = user_id, socket_url = socket_url } ! [ getNameFromStorage ]
+        -- Store Flags
+        { model
+            | user_id = user_id
+            , socket_url = socket_url
+        }
+            ! [ getNameFromStorage ]
 
 
 
@@ -138,6 +144,21 @@ update msg model =
         -- Connect
         ConnectSocket ->
             { model | socket = Just (initSocket model.socket_url model.name model.user_id) } ! []
+
+        -- Handle Messages From Phoenix
+        PhoenixMsg msg ->
+            case model.socket of
+                Nothing ->
+                    model ! []
+
+                Just modelSocket ->
+                    let
+                        ( socket, phxCmd ) =
+                            Phoenix.Socket.update msg modelSocket
+                    in
+                        ( { model | socket = Just socket }
+                        , Cmd.map PhoenixMsg phxCmd
+                        )
 
         _ ->
             model ! []
@@ -259,8 +280,7 @@ assess model =
 
 sysInput : Cmd Msg
 sysInput =
-    succeed (System_ SystemType)
-        |> perform identity
+    do (System_ SystemType)
 
 
 

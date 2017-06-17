@@ -2,6 +2,7 @@ module Util exposing (..)
 
 import Types exposing (..)
 import Regex exposing (contains, regex)
+import Task exposing (succeed, perform)
 
 
 {- TERNARY
@@ -77,3 +78,13 @@ isValidSystemReply val =
 noStop : String -> String
 noStop str =
     (String.right 1 str == ".") ? (String.dropRight 1 str) =:= str
+
+
+
+-- Do (Msg to Cmd)
+
+
+do : Msg -> Cmd Msg
+do msg =
+    succeed (msg)
+        |> perform identity
