@@ -51,8 +51,7 @@ update msg model =
             (userMsg == U.UserFinishedTyping)
                 ? (update Assess model)
                 =:= (U.update userMsg model
-                        |> Tuple.mapSecond (Cmd.map User_)
-                        |> Tuple.mapSecond (sendIfTyping userMsg)
+                        |> Tuple.mapSecond (Cmd.map User_ >> (sendIfTyping userMsg))
                     )
 
         System_ sysMsg ->
@@ -165,16 +164,6 @@ sysInput : Cmd Msg
 sysInput =
     succeed (System_ S.SystemType)
         |> perform identity
-
-
-userType : U.Msg -> Bool
-userType msg =
-    case msg of
-        U.UserType _ ->
-            True
-
-        _ ->
-            False
 
 
 
