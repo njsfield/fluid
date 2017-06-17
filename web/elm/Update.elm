@@ -72,7 +72,7 @@ initSocket { socket_url, name, user_id } =
                 ++ user_id
             )
             |> Phoenix.Socket.withDebug
-            |> Phoenix.Socket.on "new:msg" room ReceiveMessage
+            |> Phoenix.Socket.on "msg" room ReceiveMessage
 
 
 
@@ -143,7 +143,12 @@ update msg model =
 
         -- Connect
         ConnectSocket ->
-            { model | socket = Just (initSocket model) } ! [ joinChannel ]
+            { model
+              -- Prepare socket & Set JoinChannel state
+                | socket = Just (initSocket model)
+                , state = SystemAction_JoinChannel
+            }
+                |> update Assess
 
         -- Handle Messages From Phoenix
         PhoenixMsg msg ->
@@ -273,7 +278,8 @@ assess model =
 
         -- 9. Connect
         SystemAction_JoinChannel ->
-            { model | state = SystemAction_JoinChannel } ! []
+            -- TODO: Check if remote in Joining/Creating
+            { model | state = User_Idle } ! [ joinChannel ]
 
         -- 10. Join
         -- SystemAction_JoinChannel ->

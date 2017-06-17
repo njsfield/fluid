@@ -96,6 +96,7 @@ type State
     | SystemType_ConnectSocket
     | SystemAction_ConnectSocket
     | SystemAction_JoinChannel
+    | User_Idle
     | InChat
 
 
