@@ -7,6 +7,9 @@ import Route exposing (setEntryPoint, setUrlWithUserID)
 import Roles.User as U
 import Roles.System as S
 import Views.Chat
+import Phoenix.Socket
+import Phoenix.Channel
+import Phoenix.Push
 import Model exposing (..)
 import Util exposing (..)
 import Task exposing (succeed, perform, attempt)
