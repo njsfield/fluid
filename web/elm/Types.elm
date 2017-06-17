@@ -93,8 +93,9 @@ type State
     | SystemType_Connect
     | SystemAction_SetUrl
     | SystemType_SetUrl
+    | SystemType_ConnectSocket
+    | SystemAction_ConnectSocket
     | SystemAction_JoinChannel
-    | SystemType_JoinChannel
     | InChat
 
 

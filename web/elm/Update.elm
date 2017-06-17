@@ -58,14 +58,14 @@ init { user_id, socket_url } location =
 --Init Socket
 
 
-initSocket : Url -> Name -> Val -> Phoenix.Socket.Socket Msg
-initSocket url name user_id =
+initSocket : Model -> Phoenix.Socket.Socket Msg
+initSocket { socket_url, name, user_id } =
     let
         room =
-            "room:" ++ user_id
+            "user:" ++ user_id
     in
         Phoenix.Socket.init
-            (url
+            (socket_url
                 ++ "?name="
                 ++ name
                 ++ "&user_id="
@@ -132,7 +132,7 @@ update msg model =
                 Just modelSocket ->
                     let
                         channel =
-                            Phoenix.Channel.init ("room:" ++ model.name)
+                            Phoenix.Channel.init ("user:" ++ model.user_id)
 
                         ( socket, phxCmd ) =
                             Phoenix.Socket.join channel modelSocket
@@ -143,7 +143,7 @@ update msg model =
 
         -- Connect
         ConnectSocket ->
-            { model | socket = Just (initSocket model.socket_url model.name model.user_id) } ! []
+            { model | socket = Just (initSocket model) } ! [ joinChannel ]
 
         -- Handle Messages From Phoenix
         PhoenixMsg msg ->
@@ -257,19 +257,27 @@ assess model =
             if (model.entry == Creating) then
                 { model | val = "", state = SystemAction_SetUrl } ! [ setUrlWithUserID model.user_id ]
             else
-                { model | val = "", state = SystemType_JoinChannel } ! [ sysInput ]
+                { model | val = "", state = SystemType_ConnectSocket } ! [ sysInput ]
 
         -- 8 (a.1) After setting URL
         SystemAction_SetUrl ->
             { model | state = SystemType_SetUrl } ! [ sysInput ]
 
-        -- 8 (a. 2) After explanation. Join
+        -- 8 (a. 2) After explanation. Type connect
         SystemType_SetUrl ->
-            { model | val = "", state = SystemType_JoinChannel } ! [ sysInput ]
+            { model | val = "", state = SystemType_ConnectSocket } ! [ sysInput ]
 
+        -- 9. Perform Connect
+        SystemType_ConnectSocket ->
+            { model | state = SystemAction_ConnectSocket } ! [ connectSocket ]
+
+        -- 9. Connect
         SystemAction_JoinChannel ->
-            model ! []
+            { model | state = SystemAction_JoinChannel } ! []
 
+        -- 10. Join
+        -- SystemAction_JoinChannel ->
+        --     model ! []
         _ ->
             model ! []
 
@@ -281,6 +289,20 @@ assess model =
 sysInput : Cmd Msg
 sysInput =
     do (System_ SystemType)
+
+
+
+-- Connect
+
+
+connectSocket : Cmd Msg
+connectSocket =
+    do (ConnectSocket)
+
+
+joinChannel : Cmd Msg
+joinChannel =
+    do (JoinChannel)
 
 
 

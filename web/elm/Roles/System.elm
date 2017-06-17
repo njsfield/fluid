@@ -32,7 +32,7 @@ mapStateToStatement state name =
         SystemType_SetUrl ->
             "Your URL has just changed. Please share it with someone you'd like to chat with"
 
-        SystemType_JoinChannel ->
+        SystemType_ConnectSocket ->
             "I'm going to try to connect you now"
 
         _ ->
