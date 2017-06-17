@@ -1,4 +1,7 @@
-module Model exposing (..)
+module Types exposing (..)
+
+import Navigation
+
 
 -- Input Flags
 
@@ -43,6 +46,10 @@ type Role
     | Open
 
 
+
+-- GLOBAL MODEL
+
+
 type alias Model =
     { val : Val
     , name : Name
@@ -83,17 +90,32 @@ type State
 
 
 
--- MODEL
+-- Types
 
 
-baseModel : Model
-baseModel =
-    { val = ""
-    , rest = 1100
-    , name = ""
-    , user_id = ""
-    , turn = Open
-    , placeholder = "Initialising..."
-    , state = SystemType_Initialize
-    , entry = Creating
-    }
+type Msg
+    = User_ UserMsg
+    | System_ SystemMsg
+    | UrlChange Navigation.Location
+    | Assess
+    | SendMsg Val
+    | LoadName (Maybe Val)
+
+
+
+-- System Msgs
+
+
+type SystemMsg
+    = SystemType
+    | SystemFinishedTyping
+
+
+
+-- User Msgs
+
+
+type UserMsg
+    = UserType Val
+    | UserTypeBounced String
+    | UserFinishedTyping

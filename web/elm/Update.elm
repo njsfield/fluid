@@ -12,9 +12,29 @@ import Phoenix.Channel
 import Phoenix.Push
 import Json.Encode as JE
 import Json.Decode as JD
-import Model exposing (..)
+import Types exposing (..)
 import Util exposing (..)
 import Task exposing (succeed, perform, attempt)
+
+
+-- Base Model
+
+
+baseModel : Model
+baseModel =
+    { val = ""
+    , rest = 1100
+    , name = ""
+    , user_id = ""
+    , turn = Open
+    , placeholder = "Initialising..."
+    , state = SystemType_Initialize
+    , entry = Creating
+    }
+
+
+
+-- Init
 
 
 init : Flags -> Navigation.Location -> ( Model, Cmd Msg )
@@ -24,19 +44,6 @@ init { user_id } location =
             setEntryPoint location baseModel
     in
         { model | user_id = user_id } ! [ getNameFromStorage ]
-
-
-
--- GLOBAL MSG
-
-
-type Msg
-    = User_ U.Msg
-    | System_ S.Msg
-    | UrlChange Navigation.Location
-    | Assess
-    | SendMsg Val
-    | LoadName (Maybe Val)
 
 
 
@@ -61,7 +68,7 @@ update msg model =
         -- assess is called.
         -- Otherwise map (and call SendMsg if typing)
         User_ userMsg ->
-            (userMsg == U.UserFinishedTyping)
+            (userMsg == UserFinishedTyping)
                 ? (update Assess model)
                 =:= (U.update userMsg model
                         |> Tuple.mapSecond (Cmd.map User_ >> (sendIfTyping userMsg))
@@ -71,7 +78,7 @@ update msg model =
         -- Mainly for typing, if they send SystemFinishedTyping
         -- assess is called.
         System_ sysMsg ->
-            (sysMsg == S.SystemFinishedTyping)
+            (sysMsg == SystemFinishedTyping)
                 ? (update Assess model)
                 =:= (S.update sysMsg model
                         |> Tuple.mapSecond (Cmd.map System_)
@@ -204,7 +211,7 @@ assess model =
 
 sysInput : Cmd Msg
 sysInput =
-    succeed (System_ S.SystemType)
+    succeed (System_ SystemType)
         |> perform identity
 
 
@@ -213,10 +220,10 @@ sysInput =
 -- both cmd & SendMsg
 
 
-sendIfTyping : U.Msg -> Cmd Msg -> Cmd Msg
+sendIfTyping : UserMsg -> Cmd Msg -> Cmd Msg
 sendIfTyping msg cmd =
     case msg of
-        U.UserType s ->
+        UserType s ->
             succeed (SendMsg s)
                 |> perform identity
                 |> flip (::) [ cmd ]

@@ -1,8 +1,8 @@
 module Main exposing (..)
 
 import Navigation
-import Update exposing (init, update, Msg(..), view)
-import Model exposing (..)
+import Update exposing (init, update, view)
+import Types exposing (..)
 
 
 -- MAIN

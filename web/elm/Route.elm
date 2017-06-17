@@ -1,7 +1,7 @@
 module Route exposing (..)
 
 import Navigation
-import Model exposing (..)
+import Types exposing (..)
 import UrlParser exposing (..)
 
 

@@ -1,6 +1,6 @@
 module Util exposing (..)
 
-import Model exposing (..)
+import Types exposing (..)
 import Regex exposing (contains, regex)
 
 

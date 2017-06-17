@@ -1,6 +1,6 @@
 module Roles.System exposing (..)
 
-import Model exposing (..)
+import Types exposing (..)
 import Util exposing (..)
 import Time exposing (millisecond, every)
 import Process exposing (sleep)
@@ -10,12 +10,7 @@ import Route exposing (setUrlWithUserID)
 import Storage
 
 
--- System Msgs
-
-
-type Msg
-    = SystemType
-    | SystemFinishedTyping
+-- Map statements helper
 
 
 mapStateToStatement : State -> Name -> Statement
@@ -48,7 +43,7 @@ mapStateToStatement state name =
 -- System update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : SystemMsg -> Model -> ( Model, Cmd SystemMsg )
 update msg model =
     case msg of
         SystemType ->
@@ -96,7 +91,7 @@ addInput val statement =
 -- 2. Periodically send message to update
 
 
-systemType : Val -> Cmd Msg
+systemType : Val -> Cmd SystemMsg
 systemType end =
     let
         pace =
@@ -122,7 +117,7 @@ systemType end =
 -- Send Complete Msg (after short delay)
 
 
-systemFinishedTyping : Cmd Msg
+systemFinishedTyping : Cmd SystemMsg
 systemFinishedTyping =
     sleep (1000 * millisecond)
         |> perform (always (SystemFinishedTyping))

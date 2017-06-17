@@ -1,26 +1,16 @@
 module Roles.User exposing (..)
 
-import Model exposing (..)
+import Types exposing (..)
 import Util exposing (..)
 import Task exposing (perform, succeed)
 import Process exposing (sleep)
 import Time exposing (millisecond)
 
 
--- USER MSG
-
-
-type Msg
-    = UserType Val
-    | UserTypeBounced String
-    | UserFinishedTyping
-
-
-
 -- USER UPDATE
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : UserMsg -> Model -> ( Model, Cmd UserMsg )
 update msg model =
     case msg of
         UserType str ->
@@ -37,7 +27,7 @@ update msg model =
             model ! []
 
 
-userFinishedTyping : Cmd Msg
+userFinishedTyping : Cmd UserMsg
 userFinishedTyping =
     succeed UserFinishedTyping
         |> perform identity
@@ -48,7 +38,7 @@ reset val { turn } =
     (turn == Open) ? end 1 val =:= val
 
 
-debounce : Ms -> Val -> Cmd Msg
+debounce : Ms -> Val -> Cmd UserMsg
 debounce ms val =
     sleep (ms * millisecond)
         |> perform (always (UserTypeBounced val))

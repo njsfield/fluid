@@ -3,8 +3,7 @@ module Views.Chat exposing (view)
 import Html exposing (Html, div, input, text)
 import Html.Attributes exposing (class, value, placeholder, style, autofocus)
 import Html.Events exposing (onInput)
-import Roles.User exposing (Msg(..))
-import Model exposing (..)
+import Types exposing (..)
 import Util exposing (..)
 
 
@@ -46,7 +45,7 @@ baseTachs =
 -- VIEW
 
 
-view : Model -> Html Msg
+view : Model -> Html UserMsg
 view model =
     let
         tachs =
