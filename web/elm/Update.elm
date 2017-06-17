@@ -62,7 +62,7 @@ update msg model =
                     )
 
         UrlChange _ ->
-            model ! []
+            (update Assess model)
 
         SendMsg str ->
             Debug.log "Sent:" str
@@ -148,9 +148,23 @@ assess model =
         SystemAction_LoadName ->
             { model | name = model.val, state = SystemType_Welcome } ! [ sysInput ]
 
-        -- 7. System should
+        -- 7. After welcome, set url (if creating room)
         SystemType_Welcome ->
-            { model | name = model.val, state = SystemType_Connect } ! []
+            if (model.entry == Creating) then
+                { model | val = "", state = SystemAction_SetUrl } ! [ setUrlWithUserID model.user_id ]
+            else
+                { model | val = "", state = SystemType_JoinChannel } ! [ sysInput ]
+
+        -- 8 (a.1) After setting URL
+        SystemAction_SetUrl ->
+            { model | state = SystemType_SetUrl } ! [ sysInput ]
+
+        -- 8 (a. 2) After explanation. Join
+        SystemType_SetUrl ->
+            { model | val = "", state = SystemType_JoinChannel } ! [ sysInput ]
+
+        SystemAction_JoinChannel ->
+            model ! []
 
         _ ->
             model ! []

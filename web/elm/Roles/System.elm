@@ -18,35 +18,27 @@ type Msg
     | SystemFinishedTyping
 
 
-
-{- MAP STATEMENTS TO STATE -}
-
-
-statements =
-    { initial = "Initialising..."
-    , introduction = "Hi there. Welcome to Fluid. Lets begin..."
-    , namePrompt = "Please enter your first name, followed by a ."
-    , loadedFromStorage = "Welcome, I will now load your name"
-    , savingToStorage = "Welcome, I will now save your name"
-    , welcome = "Welcome ##. Lets make a room..."
-    }
-
-
 mapStateToStatement : State -> Name -> Statement
 mapStateToStatement state name =
     case state of
         SystemType_Initialize ->
-            statements.initial
+            "Initialising..."
 
         SystemType_Introduction ->
-            statements.introduction
+            "Hi there. Welcome to Fluid. Lets begin..."
 
         SystemType_NamePrompt ->
-            statements.namePrompt
+            "Please enter your first name, followed by a ."
 
         SystemType_Welcome ->
-            statements.welcome
+            "Welcome ##."
                 |> replace All (regex "##") (\_ -> noStop name)
+
+        SystemType_SetUrl ->
+            "Your URL has just changed. Please share it with someone you'd like to chat with"
+
+        SystemType_JoinChannel ->
+            "I'm going to try to connect you now"
 
         _ ->
             ""

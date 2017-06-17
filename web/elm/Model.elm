@@ -75,6 +75,10 @@ type State
     | SystemAction_LoadName
     | SystemType_Welcome
     | SystemType_Connect
+    | SystemAction_SetUrl
+    | SystemType_SetUrl
+    | SystemAction_JoinChannel
+    | SystemType_JoinChannel
     | InChat
 
 
