@@ -7,5 +7,6 @@
 <script type="text/javascript">
 
   window.user_id = "<%= assigns[:user_id] %>"
+  window.socket_url = "<%= assigns[:socket_url] %>"
 
 </script>

@@ -1,6 +1,7 @@
 module Types exposing (..)
 
 import Navigation
+import Json.Encode as JE
 import Phoenix.Socket
 
 
@@ -9,6 +10,7 @@ import Phoenix.Socket
 
 type alias Flags =
     { user_id : String
+    , socket_url : String
     }
 
 
@@ -17,6 +19,10 @@ type alias Flags =
 
 
 type alias Val =
+    String
+
+
+type alias Url =
     String
 
 
@@ -61,6 +67,7 @@ type alias Model =
     , state : State
     , entry : Entry
     , socket : Maybe (Phoenix.Socket.Socket Msg)
+    , socket_url : String
     }
 
 
@@ -103,6 +110,9 @@ type Msg
     | SendMsg Val
     | LoadName (Maybe Val)
     | JoinChannel
+    | ReceiveMessage JE.Value
+    | ConnectSocket
+    | PhoenixMsg (Phoenix.Socket.Msg Msg)
 
 
 

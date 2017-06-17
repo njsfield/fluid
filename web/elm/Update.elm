@@ -31,6 +31,7 @@ baseModel =
     , state = SystemType_Initialize
     , entry = Creating
     , socket = Nothing
+    , socket_url = ""
     }
 
 
@@ -39,12 +40,33 @@ baseModel =
 
 
 init : Flags -> Navigation.Location -> ( Model, Cmd Msg )
-init { user_id } location =
+init { user_id, socket_url } location =
     let
         model =
             setEntryPoint location baseModel
     in
-        { model | user_id = user_id } ! [ getNameFromStorage ]
+        { model | user_id = user_id, socket_url = socket_url } ! [ getNameFromStorage ]
+
+
+
+--Init Socket
+
+
+initSocket : Url -> Name -> Val -> Phoenix.Socket.Socket Msg
+initSocket url name user_id =
+    let
+        room =
+            "room:" ++ user_id
+    in
+        Phoenix.Socket.init
+            (url
+                ++ "?name="
+                ++ name
+                ++ "&user_id="
+                ++ user_id
+            )
+            |> Phoenix.Socket.withDebug
+            |> Phoenix.Socket.on "new:msg" room ReceiveMessage
 
 
 
@@ -94,6 +116,28 @@ update msg model =
             -- Replace with state checking function before sending
             Debug.log "Sent:" str
                 |> always (model ! [])
+
+        -- JoinChannel
+        JoinChannel ->
+            case model.socket of
+                Nothing ->
+                    model ! []
+
+                Just modelSocket ->
+                    let
+                        channel =
+                            Phoenix.Channel.init ("room:" ++ model.name)
+
+                        ( socket, phxCmd ) =
+                            Phoenix.Socket.join channel modelSocket
+                    in
+                        ( { model | socket = Just socket }
+                        , Cmd.map PhoenixMsg phxCmd
+                        )
+
+        -- Connect
+        ConnectSocket ->
+            { model | socket = Just (initSocket model.socket_url model.name model.user_id) } ! []
 
         _ ->
             model ! []
