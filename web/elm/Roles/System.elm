@@ -73,7 +73,10 @@ update msg model =
                         | turn = System
                         , val = addInput model.val statement
                     }
-                        ! [ systemType ]
+                        -- Call systemType Interval cmd
+                        -- Pass last character of val to determine speed
+                        !
+                            [ systemType <| String.right 1 model.val ]
 
         _ ->
             model ! []
@@ -93,10 +96,25 @@ addInput val statement =
 -- 2. Periodically send message to update
 
 
-systemType : Cmd Msg
-systemType =
-    sleep (100 * millisecond)
-        |> perform (always (SystemType))
+systemType : Val -> Cmd Msg
+systemType end =
+    let
+        pace =
+            case end of
+                -- Slowest if full stop
+                "." ->
+                    900
+
+                -- Slower if comma
+                "," ->
+                    500
+
+                -- Regular speed
+                _ ->
+                    100
+    in
+        sleep (pace * millisecond)
+            |> perform (always (SystemType))
 
 
 
