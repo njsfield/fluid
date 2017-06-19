@@ -89,6 +89,15 @@ fullReset model stage =
 
 
 
+-- Placeholder Model
+
+
+chatPlaceholder : Model -> Model
+chatPlaceholder model =
+    setPlaceholderNoVal model Idle ("Now chatting with " ++ model.name)
+
+
+
 -- Main Assess
 
 
@@ -161,7 +170,7 @@ assess model =
         -- 14. After User responds
         UT_UserResponse ->
             if (firstIsY model.val) then
-                setPlaceholderNoVal model Idle "Sending accept to remote" ! [ sendAccept ]
+                chatPlaceholder model ! [ sendAccept ]
             else
                 fullReset model SA_SendDecline ! [ sendDecline ]
 
@@ -171,12 +180,7 @@ assess model =
 
         -- 16a. After typing receive accept
         ST_ReceiveAccept ->
-            setPlaceholderNoVal model
-                Idle
-                ("You are now chatting with "
-                    ++ model.remote_name
-                )
-                ! []
+            chatPlaceholder model ! []
 
         -- 15.b After receiving decline
         SA_ReceiveDecline ->
