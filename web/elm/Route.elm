@@ -18,7 +18,7 @@ setEntryPoint location model =
     in
         case parsedHash of
             Just remote_id ->
-                { model | entry = Joining remote_id }
+                { model | remote_id = remote_id }
 
             Nothing ->
                 model

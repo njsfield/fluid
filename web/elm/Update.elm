@@ -26,10 +26,10 @@ baseModel =
     , rest = 1100
     , name = ""
     , user_id = ""
+    , remote_id = ""
     , turn = Open
     , placeholder = "Initialising..."
     , state = SystemType_Initialize
-    , entry = Creating
     , socket = Nothing
     , socket_url = ""
     }
@@ -257,9 +257,9 @@ assess model =
         SystemAction_LoadName ->
             { model | name = model.val, state = SystemType_Welcome } ! [ sysInput ]
 
-        -- 7. After welcome, set Url (if creating room)
+        -- 7. After welcome, set Url (if remote_id not present)
         SystemType_Welcome ->
-            if (model.entry == Creating) then
+            if (String.isEmpty model.remote_id) then
                 { model | val = "", state = SystemAction_SetUrl } ! [ setUrlWithUserID model.user_id ]
             else
                 { model | val = "", state = SystemType_ConnectSocket } ! [ sysInput ]
@@ -279,7 +279,7 @@ assess model =
         -- 9. Connect
         SystemAction_JoinChannel ->
             -- TODO: Check if remote in Joining/Creating
-            { model | state = User_Idle } ! [ joinChannel ]
+            { model | val = "", placeholder = "Please share this URL", state = User_Idle } ! [ joinChannel ]
 
         -- 10. Join
         -- SystemAction_JoinChannel ->

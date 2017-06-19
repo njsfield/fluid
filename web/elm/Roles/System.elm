@@ -58,7 +58,7 @@ update msg model =
                     -- Then send systemComplete
                     { model
                         | turn = Open
-                        , placeholder = ""
+                        , placeholder = statement
                     }
                         ! [ systemFinishedTyping ]
                 else

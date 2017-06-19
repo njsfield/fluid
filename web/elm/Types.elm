@@ -61,11 +61,11 @@ type alias Model =
     { val : Val
     , name : Name
     , user_id : String
+    , remote_id : String
     , rest : Ms
     , turn : Role
     , placeholder : String
     , state : State
-    , entry : Entry
     , socket : Maybe (Phoenix.Socket.Socket Msg)
     , socket_url : String
     }

@@ -93,14 +93,18 @@ colour { val } tachs =
 
 
 size : Model -> Tach
-size { val } =
-    len val
-        |> toFloat
-        |> (\x -> (x - 1) / 54 * 4)
-        |> ceiling
-        |> clamp 1 9
-        |> toString
-        |> (++) "f"
+size { val, placeholder } =
+    let
+        min_len =
+            (len val == 0) ? len placeholder =:= len val
+    in
+        min_len
+            |> toFloat
+            |> (\x -> (x - 1) / 54 * 4)
+            |> ceiling
+            |> clamp 1 9
+            |> toString
+            |> (++) "f"
 
 
 inputStyle : Model -> Tachs -> Tach
