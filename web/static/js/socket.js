@@ -4,21 +4,21 @@ import {Socket} from "phoenix"
 const user_token = window.user_token;
 const user_id    = window.user_id;
 
-// Store pathname (if remote) 
-const remote_path = 
+// Store pathname (if remote)
+const remote_path =
   window.location.pathname.slice(1) || false;
 
-// Update DOM with model helper 
+// Update DOM with model helper
 const output = () => {
   document.querySelector("#output")
-    .innerHTML = 
+    .innerHTML =
       `<pre><code>${JSON.stringify(model, null, 2)}</code><pre>`
 }
 
 // Get name
 const name = prompt('Enter your name');
 
-// Model 
+// Model
 const model = {
   name,
   user_id,
@@ -30,7 +30,7 @@ const model = {
 // Create socket, provide name & user_id
 const socket = new Socket("/socket", {
   params: {
-    name: model.name, 
+    name: model.name,
     user_token
   },
   logger: ((kind, msg, data) => {
@@ -52,10 +52,10 @@ channel.join()
       channel.push("request", {
         name: model.name,
         remote_id: model.remote_id
-      });   
+      });
       output();
     } else {
-      // Set URL 
+      // Set URL
       window.history.replaceState('', '', '/' + model.user_id)
       window.alert('Please share this url to chat')
       model.state = 'IDLE';
@@ -65,21 +65,21 @@ channel.join()
     }).receive("error", resp => {
       console.log("Unable to join", resp)})
 
-// Handle connect (from remote) 
+// Handle connect (from remote)
 channel.on("request", msg => {
   window.alert(`${msg.name} would like to connect. Press ok to conect`)
   // Auto accept (for demo)
-  model.remote_id = msg.user_id;
+  model.remote_id = msg.remote_id;
   model.remote_name = msg.name;
   channel.push("accept", {
-    name: model.name, 
+    name: model.name,
     remote_id: model.remote_id
   });
   model.state = "IN CHAT";
   output();
 })
 
-// Handle accept (from user) 
+// Handle accept (from user)
 channel.on("accept", msg => {
   window.alert(msg.name + ' has accepted');
   model.remote_name = msg.name;
@@ -97,7 +97,7 @@ channel.on("deny", msg => {
 
 // Handle leave
 channel.on("leave", msg => {
-  resetHandler(msg) 
+  resetHandler(msg)
 })
 
 // Receive message, reset state
@@ -110,7 +110,7 @@ const resetHandler = (msg) => {
   window.alert('Please share this url to chat')
 }
 
-// Handle new messages 
+// Handle new messages
 channel.on("msg", msg => {
   window.alert(msg.body)
 })

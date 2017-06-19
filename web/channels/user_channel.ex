@@ -8,53 +8,53 @@ defmodule Fluid.UserChannel do
 
 
 
-  ### Join 
+  ### Join
 
 
 
 
-  # Users with ids only join dedicated subtopic 
-  def join("user:" <> user_id, _msg, %{id: id} = socket) 
+  # Users with ids only join dedicated subtopic
+  def join("user:" <> user_id, _msg, %{id: id} = socket)
     when user_id == id do
-    # Track Topic & Socket 
+    # Track Topic & Socket
     Tracker.track(MyTracker, self(), "user:#{user_id}", id, %{stat: "here"})
     {:ok, socket}
   end
 
-  # Block others 
-  def join("user:" <> _invalid, _msg, _socket) do 
-    :error 
+  # Block others
+  def join("user:" <> _invalid, _msg, _socket) do
+    :error
   end
 
 
 
 
-  ### Incoming 
+  ### Incoming
 
 
 
 
-  # Request 
+  # Request
   def handle_in("request", %{"name" => name, "remote_id" => remote_id}, socket) do
     # Check socket is active
     case (Tracker.list(MyTracker, "user:#{remote_id}")) do
       [] ->
         # Socket Unknown. Broadcast Deny
-        broadcast socket, "deny", %{"body" => "User unavailable"} 
+        broadcast socket, "deny", %{"body" => "User unavailable"}
         {:noreply, socket}
        _ ->
         # Broadcast to remote & assign remote_id
         Endpoint.broadcast("user:#{remote_id}", "request", %{
           "name"    => name,
           "user_id" => socket.id
-        }) 
+        })
         {:noreply, assign(socket, :remote_id, remote_id)}
     end
   end
 
   # Accept
   def handle_in("accept", %{"name" => name, "remote_id" => remote_id}, socket) do
-    # Broadcast to remote 
+    # Broadcast to remote
     Endpoint.broadcast("user:#{remote_id}", "accept", %{
       "name"    => name
     })
@@ -63,28 +63,28 @@ defmodule Fluid.UserChannel do
 
   # Deny
   def handle_in("deny", %{"remote_id" => remote_id}, socket) do
-    # Broadcast to remote 
+    # Broadcast to remote
     Endpoint.broadcast("user:#{remote_id}", "deny", %{
-      "body"    => "User has denied to connect" 
+      "body"    => "User has denied to connect"
     })
     {:noreply, socket}
   end
 
   # Msg
   def handle_in("msg", %{"body" => body}, %{assigns: %{remote_id: remote_id}} = socket) do
-    # Broadcast to user/remote (pass user_id from socket) 
+    # Broadcast to user/remote (pass user_id from socket)
     Endpoint.broadcast("user:#{remote_id}", "msg", %{
-      "body"    => body, 
-      "user_id" => socket.id 
+      "body"    => body,
+      "user_id" => socket.id
     })
     {:noreply, socket}
   end
 
-  # Ignore 
+  # Ignore
   def handle_in(_topic, _msg, socket), do: {:noreply, socket}
 
-  # Terminate 
-  def terminate(_reason, %{assigns: %{remote_id: remote_id, name: name}} = socket) do 
+  # Terminate
+  def terminate(_reason, %{assigns: %{remote_id: remote_id, name: name}} = socket) do
     # Broadcast to remote (pass this users id and name)
     Endpoint.broadcast("user:#{remote_id}", "leave", %{
       "user_id" => socket.id,
@@ -96,8 +96,8 @@ defmodule Fluid.UserChannel do
 
 
 
-  ### Outgoing 
-  
+  ### Outgoing
+
 
 
 
@@ -107,51 +107,51 @@ defmodule Fluid.UserChannel do
 
 
   # Request User
-  def handle_out("request", %{"user_id" => user_id} = msg, %{assigns: %{remote_id: remote_id}} = socket) do
+  def handle_out("request", %{"user_id" => user_id, "name" => name}, %{assigns: %{remote_id: remote_id}} = socket) do
     if (is_nil(remote_id)) do
       # Pass request when User has no remote_id stored
-      push socket, "request", msg
+      push socket, "request", %{"name" => name, "remote_id" => user_id}
     else
       # If User has remote_id stored, broadcast back with deny
       Endpoint.broadcast("user:#{user_id}", "deny", %{
-        "body"    => "User is busy" 
+        "body"    => "User is busy"
       })
-    end 
+    end
     {:noreply, socket}
   end
 
   # Accept
   def handle_out("accept", msg, %{assigns: %{remote_id: _remote_id}} = socket) do
-    # Send accept message 
+    # Send accept message
     push socket, "accept", msg
     {:noreply, socket}
   end
 
-  # Deny 
+  # Deny
   def handle_out("deny", msg, %{assigns: %{remote_id: _remote_id}} = socket) do
-    # Send deny message 
+    # Send deny message
     push socket, "deny", msg
     # Reset remote_id to nil
     {:noreply, assign(socket, :remote_id, nil)}
   end
 
-  # Msg 
-  def handle_out("msg", %{"user_id" => user_id, "body" => body}, %{assigns: %{remote_id: remote_id}} = socket) 
-    when user_id == remote_id do 
-    # Only push msg when User has matching remote_id stored in socket 
-    push socket, "msg", %{"body" => body} 
+  # Msg
+  def handle_out("msg", %{"user_id" => user_id, "body" => body}, %{assigns: %{remote_id: remote_id}} = socket)
+    when user_id == remote_id do
+    # Only push msg when User has matching remote_id stored in socket
+    push socket, "msg", %{"body" => body}
     {:noreply, socket}
   end
 
-  # Leave 
-  def handle_out("leave", %{"user_id" => user_id, "name" => name}, %{assigns: %{remote_id: remote_id}} = socket) 
-    when user_id == remote_id do 
-    # Only push msg when User has matching remote_id stored in socket 
-    push socket, "leave", %{"body" => "#{name} has left"} 
+  # Leave
+  def handle_out("leave", %{"user_id" => user_id, "name" => name}, %{assigns: %{remote_id: remote_id}} = socket)
+    when user_id == remote_id do
+    # Only push msg when User has matching remote_id stored in socket
+    push socket, "leave", %{"body" => "#{name} has left"}
     # Reset remote_id to nil
     {:noreply, assign(socket, :remote_id, nil)}
   end
-  
+
   # Ignore others
   def handle_out(_topic, _msg, socket), do: {:noreply, socket}
 

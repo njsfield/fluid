@@ -6,34 +6,31 @@ import Time exposing (millisecond, every)
 import Process exposing (sleep)
 import Task exposing (perform, attempt, succeed)
 import Regex exposing (HowMany(All), replace, regex)
-import Route exposing (setUrlWithUserID)
 import Storage
 
 
 -- Map statements helper
 
 
-mapStateToStatement : State -> Name -> Statement
-mapStateToStatement state name =
-    case state of
-        SystemType_Initialize ->
-            "Initialising..."
+mapStageToStatement : Stage -> Model -> Statement
+mapStageToStatement stage { name, remote_name } =
+    case stage of
+        ST_NamePrompt ->
+            "Hi there. Please enter your first name, followed by a ."
 
-        SystemType_Introduction ->
-            "Hi there. Welcome to Fluid. Lets begin..."
-
-        SystemType_NamePrompt ->
-            "Please enter your first name, followed by a ."
-
-        SystemType_Welcome ->
+        ST_Welcome ->
             "Welcome ##."
                 |> replace All (regex "##") (\_ -> noStop name)
 
-        SystemType_SetUrl ->
-            "Your URL has just changed. Please share it with someone you'd like to chat with"
+        ST_ConnectSocket ->
+            "Connecting to server..."
 
-        SystemType_ConnectSocket ->
-            "I'm going to try to connect you now"
+        ST_SendRequest ->
+            "Sending request to remote..."
+
+        ST_ReceiveRequest ->
+            "## would like to chat. Allow? Type 'Y' for yes, 'N' for no."
+                |> replace All (regex "##") (\_ -> remote_name)
 
         _ ->
             ""
@@ -50,7 +47,7 @@ update msg model =
             -- Prepare Statement
             let
                 statement =
-                    mapStateToStatement model.state model.name
+                    mapStageToStatement model.stage model
             in
                 -- Check if input val is complete statement
                 if model.val == statement then
@@ -68,7 +65,7 @@ update msg model =
                         | turn = System
                         , val = addInput model.val statement
                     }
-                        -- Call systemType Interval cmd
+                        -- Call ST Interval cmd
                         -- Pass last character of val to determine speed
                         !
                             [ systemType <| String.right 1 model.val ]

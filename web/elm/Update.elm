@@ -3,7 +3,7 @@ module Update exposing (..)
 import Html exposing (Html, div)
 import Navigation
 import Storage
-import Route exposing (setEntryPoint, setUrlWithUserID)
+import Route exposing (setEntryPoint, setUrlWithUserId)
 import Roles.User as U
 import Roles.System as S
 import Views.Chat
@@ -11,7 +11,7 @@ import Phoenix.Socket
 import Phoenix.Channel
 import Phoenix.Push
 import Json.Encode as JE
-import Json.Decode as JD
+import Json.Decode as JD exposing (field)
 import Types exposing (..)
 import Util exposing (..)
 import Assess exposing (..)
@@ -27,12 +27,15 @@ baseModel =
     , rest = 1100
     , name = ""
     , user_id = ""
+    , channel_id = ""
     , remote_id = ""
+    , remote_name = ""
     , turn = Open
     , placeholder = "Initialising..."
-    , state = SystemType_Initialize
+    , stage = ST_Introduction
     , socket = Nothing
     , socket_url = ""
+    , entry = Creating
     }
 
 
@@ -47,9 +50,10 @@ init { user_id, socket_url } location =
         model =
             setEntryPoint location baseModel
     in
-        -- Store Flags
+        -- Store Flags, make channel_id from user_id
         { model
             | user_id = user_id
+            , channel_id = "user:" ++ user_id
             , socket_url = socket_url
         }
             ! [ getNameFromStorage ]
@@ -60,20 +64,19 @@ init { user_id, socket_url } location =
 
 
 initSocket : Model -> Phoenix.Socket.Socket Msg
-initSocket { socket_url, name, user_id } =
-    let
-        room =
-            "user:" ++ user_id
-    in
-        Phoenix.Socket.init
-            (socket_url
-                ++ "?name="
-                ++ name
-                ++ "&user_id="
-                ++ user_id
-            )
-            |> Phoenix.Socket.withDebug
-            |> Phoenix.Socket.on "msg" room ReceiveMessage
+initSocket { socket_url, name, user_id, channel_id } =
+    -- Connect socket with name & user_id as payload
+    -- Listen on channel_id
+    Phoenix.Socket.init
+        (socket_url
+            ++ "?name="
+            ++ name
+            ++ "&user_id="
+            ++ user_id
+        )
+        |> Phoenix.Socket.withDebug
+        |> Phoenix.Socket.on "msg" channel_id ReceiveMessage
+        |> Phoenix.Socket.on "request" channel_id ReceiveRequest
 
 
 
@@ -122,8 +125,9 @@ update msg model =
         UrlChange _ ->
             (update Assess model)
 
-        SetUrl url ->
-            model ! [ setUrlWithUserID url ]
+        -- Called to add hash of channel id
+        SetUrl user_id ->
+            model ! [ setUrlWithUserId user_id ]
 
         -- SendMsg via socket
         SendMsg str ->
@@ -131,30 +135,29 @@ update msg model =
             Debug.log "Sent:" str
                 |> always (model ! [])
 
+        -- SendRequest via socket
+        -- Give JSON object containing name & remote_id
+        SendRequest ->
+            sendRequest model
+
+        -- On Receive socket
+        ReceiveRequest msg ->
+            receiveRequest msg model
+
         -- JoinChannel
         JoinChannel ->
-            case model.socket of
-                Nothing ->
-                    model ! []
+            joinChannel model
 
-                Just modelSocket ->
-                    let
-                        channel =
-                            Phoenix.Channel.init ("user:" ++ model.user_id)
-
-                        ( socket, phxCmd ) =
-                            Phoenix.Socket.join channel modelSocket
-                    in
-                        ( { model | socket = Just socket }
-                        , Cmd.map PhoenixMsg phxCmd
-                        )
+        -- Called after Joining
+        JoinMessage _ ->
+            model
+                |> update (Assess)
 
         -- Connect
         ConnectSocket ->
             { model
               -- Prepare socket & Set JoinChannel state
                 | socket = Just (initSocket model)
-                , state = SystemAction_JoinChannel
             }
                 |> update Assess
 
@@ -219,7 +222,7 @@ maybeStartFromWelcome maybeName model =
             { model
                 | val = name
                 , name = name
-                , state = SystemAction_LoadName
+                , stage = SA_LoadName
             }
                 |> update (Assess)
 
@@ -243,6 +246,126 @@ sendIfTyping msg cmd =
 
         _ ->
             cmd
+
+
+
+-- sendMessage helper
+-- Accepts subject (e.g. 'msg')
+-- JSON encoded msg
+-- Model, returns (Model, Cmd Msg)
+
+
+sendMessage : Subject -> JE.Value -> Model -> ( Model, Cmd Msg )
+sendMessage subject msg model =
+    case model.socket of
+        Nothing ->
+            model ! []
+
+        Just socket ->
+            let
+                push_ =
+                    Phoenix.Push.init subject ("user:" ++ model.user_id)
+                        |> Phoenix.Push.withPayload msg
+
+                ( socket_, cmd ) =
+                    Phoenix.Socket.push push_ socket
+            in
+                ( { model | socket = Just socket_ }
+                , Cmd.map PhoenixMsg cmd
+                )
+
+
+
+-- send Request Helper
+
+
+sendRequest : Model -> ( Model, Cmd Msg )
+sendRequest model =
+    let
+        msg =
+            (JE.object
+                [ ( "name", JE.string model.name )
+                , ( "remote_id", JE.string model.remote_id )
+                ]
+            )
+    in
+        sendMessage "request" msg model
+
+
+
+-- Receive Request
+-- Save remote_id & remote_name temporarily
+-- Call SA_ReceiveRequest
+
+
+receiveRequest : JE.Value -> Model -> ( Model, Cmd Msg )
+receiveRequest raw model =
+    case JD.decodeValue requestMsgDecoder raw of
+        Ok msg ->
+            { model
+                | remote_name = msg.name
+                , remote_id = msg.remote_id
+                , stage = SA_ReceiveRequest
+            }
+                |> update (Assess)
+
+        Err error ->
+            ( model, Cmd.none )
+
+
+
+-- Decoders
+
+
+requestMsgDecoder : JD.Decoder RequestMessage
+requestMsgDecoder =
+    JD.map2 RequestMessage
+        (JD.field "name" JD.string)
+        (JD.field "remote_id" JD.string)
+
+
+acceptMsgDecoder : JD.Decoder RequestMessage
+acceptMsgDecoder =
+    requestMsgDecoder
+
+
+
+-- Subs
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.socket of
+        Nothing ->
+            Sub.none
+
+        Just phxSocket ->
+            Phoenix.Socket.listen phxSocket PhoenixMsg
+
+
+
+{- Join -}
+
+
+joinChannel : Model -> ( Model, Cmd Msg )
+joinChannel model =
+    case model.socket of
+        Nothing ->
+            model ! []
+
+        Just modelSocket ->
+            -- Join Channel from Channel ID in model
+            let
+                channel =
+                    Phoenix.Channel.init (model.channel_id)
+                        |> Phoenix.Channel.onJoin (always (JoinMessage model.channel_id))
+
+                ( socket, phxCmd ) =
+                    Phoenix.Socket.join channel modelSocket
+            in
+                ( { model | socket = Just socket }
+                , Cmd.map PhoenixMsg phxCmd
+                )
 
 
 

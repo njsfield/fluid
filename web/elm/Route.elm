@@ -18,14 +18,21 @@ setEntryPoint location model =
     in
         case parsedHash of
             Just remote_id ->
-                { model | remote_id = remote_id }
+                { model
+                    | remote_id = remote_id
+                    , entry = Joining
+                }
 
             Nothing ->
                 model
 
 
-setUrlWithUserID : String -> Cmd msg
-setUrlWithUserID user_id =
+
+-- Makes Cmd to modify URL with Hash of user_id
+
+
+setUrlWithUserId : String -> Cmd Msg
+setUrlWithUserId user_id =
     "/#"
         ++ urlHash
         ++ "/"

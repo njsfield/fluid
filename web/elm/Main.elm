@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Navigation
-import Update exposing (init, update, view)
+import Update exposing (init, update, view, subscriptions)
 import Types exposing (..)
 
 
@@ -14,5 +14,5 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }

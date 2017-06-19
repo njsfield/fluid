@@ -15,6 +15,16 @@ type alias Flags =
 
 
 
+-- Reqest Msg helper
+
+
+type alias RequestMessage =
+    { name : String
+    , remote_id : String
+    }
+
+
+
 -- Types
 
 
@@ -31,6 +41,10 @@ type alias Ms =
 
 
 type alias Id =
+    String
+
+
+type alias Subject =
     String
 
 
@@ -62,41 +76,50 @@ type alias Model =
     , name : Name
     , user_id : String
     , remote_id : String
+    , remote_name : String
+    , channel_id : String
     , rest : Ms
     , turn : Role
     , placeholder : String
-    , state : State
+    , stage : Stage
     , socket : Maybe (Phoenix.Socket.Socket Msg)
     , socket_url : String
+    , entry : Entry
     }
 
 
 type Entry
-    = Joining String
+    = Joining
     | Creating
 
 
 
-{- State
-   Representing different states in the application.
+{- Stage
+   Representing different stages in the application.
 -}
 
 
-type State
-    = SystemType_Initialize
-    | SystemType_Introduction
-    | SystemType_NamePrompt
-    | UserType_Name
-    | SystemAction_SaveName
-    | SystemAction_LoadName
-    | SystemType_Welcome
-    | SystemType_Connect
-    | SystemAction_SetUrl
-    | SystemType_SetUrl
-    | SystemType_ConnectSocket
-    | SystemAction_ConnectSocket
-    | SystemAction_JoinChannel
-    | User_Idle
+type Stage
+    = Begin
+    | ST_Introduction
+    | ST_NamePrompt
+    | UT_Name
+    | SA_SaveName
+    | SA_LoadName
+    | ST_Welcome
+    | ST_Connect
+    | SA_SetUrl
+    | ST_SetUrl
+    | ST_ConnectSocket
+    | SA_ConnectSocket
+    | SA_JoinChannel
+    | ST_SendRequest
+    | SA_SendRequest
+    | SA_ReceiveRequest
+    | ST_ReceiveRequest
+    | UT_UserResponse
+    | SA_SendAccept
+    | Idle
     | InChat
 
 
@@ -114,6 +137,12 @@ type Msg
     | LoadName (Maybe Val)
     | SaveName Val
     | JoinChannel
+    | JoinMessage String
+    | SendRequest
+    | ReceiveRequest JE.Value
+    | ReceiveAccept JE.Value
+    | ReceiveDecline JE.Value
+    | ReceiveLeave JE.Value
     | ReceiveMessage JE.Value
     | ConnectSocket
     | PhoenixMsg (Phoenix.Socket.Msg Msg)
