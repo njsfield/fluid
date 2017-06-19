@@ -88,3 +88,10 @@ do : Msg -> Cmd Msg
 do msg =
     succeed (msg)
         |> perform identity
+
+
+firstIsY : String -> Bool
+firstIsY str =
+    String.left 1 str
+        |> String.toUpper
+        |> (==) "Y"

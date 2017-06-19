@@ -143,6 +143,14 @@ update msg model =
         SendRequest ->
             sendRequest model
 
+        -- Send Accept
+        SendAccept ->
+            sendAccept model
+
+        -- Send Decline
+        SendDecline ->
+            sendDecline model
+
         -- On Receive socket
         ReceiveRequest msg ->
             receiveRequest msg model

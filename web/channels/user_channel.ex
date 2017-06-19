@@ -56,7 +56,8 @@ defmodule Fluid.UserChannel do
   def handle_in("accept", %{"name" => name, "remote_id" => remote_id}, socket) do
     # Broadcast to remote
     Endpoint.broadcast("user:#{remote_id}", "accept", %{
-      "name"    => name
+      "name"    => name,
+      "user_id" => socket.id
     })
     {:noreply, assign(socket, :remote_id, remote_id)}
   end
@@ -121,9 +122,9 @@ defmodule Fluid.UserChannel do
   end
 
   # Accept
-  def handle_out("accept", msg, %{assigns: %{remote_id: _remote_id}} = socket) do
+  def handle_out("accept", %{"user_id" => user_id, "name" => name}, %{assigns: %{remote_id: _remote_id}} = socket) do
     # Send accept message
-    push socket, "accept", msg
+    push socket, "accept", %{"name" => name, "remote_id" => user_id}
     {:noreply, socket}
   end
 

@@ -31,6 +31,65 @@ import Route exposing (setEntryPoint, setUrlWithUserId)
       Toggles through next stage
       depending on stage
 -}
+{- Model Helpers
+   For general purpose model changes
+-}
+-- withStage: Simply Adds Stage to model
+
+
+setStage : Model -> Stage -> Model
+setStage model stage =
+    { model
+        | stage = stage
+    }
+
+
+setStageNoVal : Model -> Stage -> Model
+setStageNoVal model stage =
+    { model
+        | val = ""
+        , stage = stage
+    }
+
+
+setStageAndName : Model -> Stage -> Model
+setStageAndName model stage =
+    { model
+        | name = (noStop model.val)
+        , stage = stage
+    }
+
+
+setStageAndNameNoVal : Model -> Stage -> Model
+setStageAndNameNoVal model stage =
+    { model
+        | val = ""
+        , name = (noStop model.val)
+        , stage = stage
+    }
+
+
+setPlaceholderNoVal : Model -> Stage -> String -> Model
+setPlaceholderNoVal model stage placeholder =
+    { model
+        | val = ""
+        , placeholder = placeholder
+        , stage = stage
+    }
+
+
+fullReset : Model -> Stage -> Model
+fullReset model stage =
+    { model
+        | val = ""
+        , placeholder = ""
+        , remote_name = ""
+        , remote_id = ""
+    }
+
+
+
+-- Main Assess
 
 
 assess : Model -> ( Model, Cmd Msg )
@@ -39,121 +98,101 @@ assess model =
     case model.stage of
         -- 1. Begin with introduction
         Begin ->
-            { model | stage = ST_Introduction } ! [ sysInput ]
+            setStage model ST_Introduction ! [ sysInput ]
 
         -- 2. System type introduction
         ST_Introduction ->
-            { model | val = "", stage = ST_NamePrompt } ! [ sysInput ]
+            setStageNoVal model ST_NamePrompt ! [ sysInput ]
 
         -- 3. After system asked for name
         ST_NamePrompt ->
-            { model | val = "", stage = UT_Name } ! []
+            setStageNoVal model UT_Name ! []
 
         -- 4. After user has typed name (if valid) then send name
         UT_Name ->
             (isValidSystemReply model.val)
-                ? ({ model | stage = SA_SaveName } ! [ saveName (noStop model.val) ])
+                ? (setStage model SA_SaveName ! [ saveName (noStop model.val) ])
                 =:= (model ! [])
 
         -- 5 (a). System should type Welcome after saving
         SA_SaveName ->
-            { model | val = "", name = (noStop model.val), stage = ST_Welcome } ! [ sysInput ]
+            setStageAndNameNoVal model ST_Welcome ! [ sysInput ]
 
         -- 6 (b). System should type Welcome after loading
         SA_LoadName ->
-            { model | name = model.val, stage = ST_Welcome } ! [ sysInput ]
+            setStageAndName model ST_Welcome ! [ sysInput ]
 
         -- 7. After welcome, set Url (if creating)
         ST_Welcome ->
             if (model.entry == Creating) then
-                { model | val = "", stage = SA_SetUrl } ! [ setUrl model.user_id ]
+                setStageNoVal model SA_SetUrl ! [ setUrl model.user_id ]
             else
-                { model | val = "", stage = ST_ConnectSocket } ! [ sysInput ]
+                setStageNoVal model ST_ConnectSocket ! [ sysInput ]
 
         -- 8 (a.1) After setting URL
         SA_SetUrl ->
-            { model | stage = ST_ConnectSocket } ! [ sysInput ]
+            setStage model ST_ConnectSocket ! [ sysInput ]
 
         -- 9. Perform Connect
         ST_ConnectSocket ->
-            { model | stage = SA_ConnectSocket } ! [ connectSocket ]
+            setStage model SA_ConnectSocket ! [ connectSocket ]
 
         -- 10. Perform Join
         SA_ConnectSocket ->
-            { model | stage = SA_JoinChannel } ! [ joinChannel ]
+            setStage model SA_JoinChannel ! [ joinChannel ]
 
         -- 11. After Join
         SA_JoinChannel ->
             if (model.entry == Creating) then
                 -- Display Share URL
-                { model | val = "", placeholder = "Please share this URL", stage = Idle } ! []
+                setPlaceholderNoVal model Idle "Please share this URL" ! []
             else
                 -- Display Send Request
-                { model | val = "", placeholder = "Sending request to remote", stage = Idle } ! [ sendRequest ]
+                setPlaceholderNoVal model Idle "Sending request to remote" ! [ sendRequest ]
 
         -- 12.a User Receives Request
         SA_ReceiveRequest ->
-            { model | stage = ST_ReceiveRequest } ! [ sysInput ]
+            setStage model ST_ReceiveRequest ! [ sysInput ]
 
         -- 13. After system typed info for user
         ST_ReceiveRequest ->
-            { model | val = "", stage = UT_UserResponse } ! []
+            setStageNoVal model UT_UserResponse ! []
 
         -- 14. After User responds
         UT_UserResponse ->
-            case (String.left 1 model.val |> String.toUpper) of
-                "Y" ->
-                    { model | val = "", stage = SA_SendAccept } ! [ sendAccept ]
-
-                _ ->
-                    { model
-                        | val = ""
-                        , stage = SA_SendDecline
-                        , remote_id = ""
-                        , remote_name = ""
-                    }
-                        ! [ sendDecline ]
+            if (firstIsY model.val) then
+                setPlaceholderNoVal model Idle "Sending accept to remote" ! [ sendAccept ]
+            else
+                fullReset model SA_SendDecline ! [ sendDecline ]
 
         -- 15.a After receiving accept
         SA_ReceiveAccept ->
-            { model | val = "", stage = ST_ReceiveAccept } ! [ sysInput ]
+            setStageNoVal model ST_ReceiveAccept ! [ sysInput ]
 
         -- 16a. After typing receive accept
         ST_ReceiveAccept ->
-            { model
-                | val = ""
-                , placeholder = ("You are now chatting with " ++ model.remote_name)
-                , stage = InChat
-            }
+            setPlaceholderNoVal model
+                Idle
+                ("You are now chatting with "
+                    ++ model.remote_name
+                )
                 ! []
 
         -- 15.b After receiving decline
         SA_ReceiveDecline ->
-            { model | val = "", stage = ST_ReceiveDecline } ! [ sysInput ]
+            setStageNoVal model ST_ReceiveDecline ! [ sysInput ]
 
         -- 16.b Reset back to set URL
         ST_ReceiveDecline ->
-            { model
-                | val = ""
-                , placeholder = ""
-                , remote_id = ""
-                , stage = SA_SetUrl
-            }
-                ! [ setUrl model.user_id ]
+            fullReset model SA_SetUrl ! [ setUrl model.user_id ]
 
         -- 17 After receiving leave
         SA_ReceiveLeave ->
-            { model | val = "", stage = ST_ReceiveLeave } ! [ sysInput ]
+            setStageNoVal model ST_ReceiveLeave ! [ sysInput ]
 
         -- 18 After typing leave
         ST_ReceiveLeave ->
-            { model
-                | val = ""
-                , placeholder = ""
-                , remote_id = ""
-                , stage = SA_SetUrl
-            }
-                ! [ setUrl model.user_id ]
+            fullReset model SA_SetUrl ! [ setUrl model.user_id ]
 
         _ ->
             model ! []
