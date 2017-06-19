@@ -16,7 +16,6 @@ type alias Tach =
 
 type alias Tachs =
     { container : Tach
-    , restedBg : Tach
     , typingBg : Tach
     , input : Tach
     , typeCol : Tach
@@ -32,10 +31,9 @@ type alias Tachs =
 baseTachs : Tachs
 baseTachs =
     { container = "vw-100 vh-100 pa3 flex items-center justify-center smooth"
-    , restedBg = ""
-    , typingBg = "bg-white"
+    , typingBg = "bg-lightest-blue"
     , input = "bt-0 br-0 bl-0 bw1 pa-1 lh-title w-100 mw6-ns bg-transparent outline-0 sans-serif smooth"
-    , typeCol = "black b--black"
+    , typeCol = "dark-gray b--dark-gray"
     , restCol = "0-30"
     , emptyCol = "pl--grey black b--black"
     }
@@ -72,17 +70,19 @@ setTachs turn =
     case turn of
         User ->
             { baseTachs
-                | restedBg = "bg-gray"
-                , typingBg = "bg-blue"
-                , typeCol = "white b--white"
+                | typingBg = "bg-light-blue"
                 , emptyCol = "pl--black white b--black"
             }
 
         Remote ->
             { baseTachs
-                | restedBg = "bg-gray"
-                , typingBg = "bg-green"
-                , typeCol = "white b--white"
+                | typingBg = "bg-light-green"
+                , emptyCol = "pl--black white b--black"
+            }
+
+        System ->
+            { baseTachs
+                | typingBg = "bg-moon-gray"
                 , emptyCol = "pl--black white b--black"
             }
 
@@ -127,6 +127,4 @@ inputStyle model tachs =
 
 containerStyle : Model -> Tachs -> Tach
 containerStyle { turn } tachs =
-    tachs.container
-        |> (^+) " "
-        |> (^+) ((turn == Open) ? tachs.restedBg =:= tachs.typingBg)
+    tachs.container ++ " " ++ tachs.typingBg
