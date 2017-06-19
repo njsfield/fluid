@@ -8,11 +8,6 @@ import Roles.User as U
 import Roles.Remote as R
 import Roles.System as S
 import Views.Chat
-import Phoenix.Socket
-import Phoenix.Channel
-import Phoenix.Push
-import Json.Encode as JE
-import Json.Decode as JD exposing (field)
 import Types exposing (..)
 import Util exposing (..)
 import Assess exposing (..)
@@ -61,29 +56,6 @@ init { user_id, socket_url } location =
 
 
 
---Init Socket
-
-
-initSocket : Model -> Phoenix.Socket.Socket Msg
-initSocket { socket_url, name, user_id, channel_id } =
-    -- Connect socket with name & user_id as payload
-    -- Listen on channel_id
-    Phoenix.Socket.init
-        (socket_url
-            ++ "?name="
-            ++ name
-            ++ "&user_id="
-            ++ user_id
-        )
-        |> Phoenix.Socket.withDebug
-        |> Phoenix.Socket.on "message" channel_id ReceiveMessage
-        |> Phoenix.Socket.on "request" channel_id ReceiveRequest
-        |> Phoenix.Socket.on "accept" channel_id ReceiveAccept
-        |> Phoenix.Socket.on "deny" channel_id ReceiveDecline
-        |> Phoenix.Socket.on "leave" channel_id ReceiveLeave
-
-
-
 -- GLOBAL UPDATES
 
 
@@ -125,11 +97,9 @@ update msg model =
                         |> Tuple.mapSecond (Cmd.map System_)
                     )
 
-        -- When Remote sends message
-        -- Mainly for typing, if they send RemoteFinishedTyping
-        -- assess is called.
+        -- For all remote (and socket)
         Remote_ remoteMsg ->
-            (remoteMsg == RemoteFinishedTyping)
+            (remoteMsg == RemoteComplete)
                 ? (update Assess model)
                 =:= (R.update remoteMsg model
                         |> Tuple.mapSecond (Cmd.map Remote_)
@@ -142,77 +112,6 @@ update msg model =
         -- Called to add hash of channel id
         SetUrl user_id ->
             model ! [ setUrlWithUserId user_id ]
-
-        -- SendMessage
-        SendMessage str ->
-            sendMessage str model
-
-        -- SendRequest
-        SendRequest ->
-            sendRequest model
-
-        -- Send Accept
-        SendAccept ->
-            sendAccept model
-
-        -- Send Decline
-        SendDecline ->
-            sendDecline model
-
-        -- On Receive socket
-        ReceiveRequest msg ->
-            receiveRequest msg model
-
-        -- On Accept
-        ReceiveAccept msg ->
-            receiveAccept msg model
-
-        -- On Decline
-        ReceiveDecline msg ->
-            receiveDecline msg model
-
-        -- On Leave
-        ReceiveLeave msg ->
-            receiveLeave msg model
-
-        -- On Message
-        ReceiveMessage msg ->
-            receiveMessage msg model
-
-        -- JoinChannel
-        JoinChannel ->
-            joinChannel model
-
-        -- Called after Joining
-        JoinMessage _ ->
-            model
-                |> update (Assess)
-
-        -- Connect
-        ConnectSocket ->
-            { model
-              -- Prepare socket & Set JoinChannel state
-                | socket = Just (initSocket model)
-            }
-                |> update Assess
-
-        -- Handle Messages From Phoenix
-        PhoenixMsg msg ->
-            case model.socket of
-                Nothing ->
-                    model ! []
-
-                Just modelSocket ->
-                    let
-                        ( socket, phxCmd ) =
-                            Phoenix.Socket.update msg modelSocket
-                    in
-                        ( { model | socket = Just socket }
-                        , Cmd.map PhoenixMsg phxCmd
-                        )
-
-        _ ->
-            model ! []
 
 
 
@@ -277,7 +176,7 @@ sendIfTyping msg { stage } cmd =
         UserType str ->
             -- Assert that user before firing send message cmd
             if stage == InChat then
-                succeed (SendMessage str)
+                succeed (Remote_ (SendMessage str))
                     |> perform identity
                     |> flip (::) [ cmd ]
                     |> Cmd.batch
@@ -289,234 +188,12 @@ sendIfTyping msg { stage } cmd =
 
 
 
--- sendMessage helper
--- Accepts subject (e.g. 'msg')
--- JSON encoded msg
--- Model, returns (Model, Cmd Msg)
-
-
-send : Subject -> JE.Value -> Model -> ( Model, Cmd Msg )
-send subject msg model =
-    case model.socket of
-        Nothing ->
-            model ! []
-
-        Just socket ->
-            let
-                push_ =
-                    Phoenix.Push.init subject ("user:" ++ model.user_id)
-                        |> Phoenix.Push.withPayload msg
-
-                ( socket_, cmd ) =
-                    Phoenix.Socket.push push_ socket
-            in
-                ( { model | socket = Just socket_ }
-                , Cmd.map PhoenixMsg cmd
-                )
-
-
-
--- send details (name & remote_id)
--- Accepts model and a string subject, e.g. ('request', 'accept')
-
-
-sendDetails : Model -> String -> ( Model, Cmd Msg )
-sendDetails model subject =
-    let
-        msg =
-            (JE.object
-                [ ( "name", JE.string model.name )
-                , ( "remote_id", JE.string model.remote_id )
-                ]
-            )
-    in
-        send subject msg model
-
-
-
--- send text (with body key)
--- Accepts model, subject and text.
-
-
-sendText : Model -> String -> String -> ( Model, Cmd Msg )
-sendText model subject text =
-    let
-        msg =
-            (JE.object
-                [ ( "body", JE.string text ) ]
-            )
-    in
-        send subject msg model
-
-
-sendRequest : Model -> ( Model, Cmd Msg )
-sendRequest model =
-    sendDetails model "request"
-
-
-sendAccept : Model -> ( Model, Cmd Msg )
-sendAccept model =
-    sendDetails model "accept"
-
-
-sendDecline : Model -> ( Model, Cmd Msg )
-sendDecline model =
-    sendDetails model "deny"
-
-
-sendMessage : String -> Model -> ( Model, Cmd Msg )
-sendMessage str model =
-    sendText model "message" str
-
-
-
--- Receive Request
--- Save remote_id & remote_name temporarily
--- Set Stage
--- Then assess
-
-
-receiveDetails : JE.Value -> Model -> Stage -> ( Model, Cmd Msg )
-receiveDetails raw model stage =
-    case JD.decodeValue detailsMsgDecoder raw of
-        Ok msg ->
-            { model
-                | remote_name = msg.name
-                , remote_id = msg.remote_id
-                , stage = stage
-            }
-                |> update (Assess)
-
-        Err error ->
-            model ! []
-
-
-
--- Send to Remote
-
-
-receiveText : JE.Value -> Model -> Stage -> ( Model, Cmd Msg )
-receiveText raw model stage =
-    case JD.decodeValue textMsgDecoder raw of
-        Ok { body } ->
-            update (Remote_ (RemoteType body)) model
-
-        Err error ->
-            model ! []
-
-
-
--- When Request is received
-
-
-receiveRequest : JE.Value -> Model -> ( Model, Cmd Msg )
-receiveRequest raw model =
-    receiveDetails raw model SA_ReceiveRequest
-
-
-
--- When Accept is received
-
-
-receiveAccept : JE.Value -> Model -> ( Model, Cmd Msg )
-receiveAccept raw model =
-    receiveDetails raw model SA_ReceiveAccept
-
-
-
---- When Leave is received (ignore msg)
-
-
-receiveDecline : JE.Value -> Model -> ( Model, Cmd Msg )
-receiveDecline _ model =
-    { model | stage = SA_ReceiveDecline }
-        |> update (Assess)
-
-
-
---- When Leave is received (ignore msg)
-
-
-receiveLeave : JE.Value -> Model -> ( Model, Cmd Msg )
-receiveLeave _ model =
-    { model | stage = SA_ReceiveLeave }
-        |> update (Assess)
-
-
-receiveMessage : JE.Value -> Model -> ( Model, Cmd Msg )
-receiveMessage raw model =
-    receiveText raw model InChat
-
-
-
--- Decoders
--- On Details
-
-
-detailsMsgDecoder : JD.Decoder DetailsMessage
-detailsMsgDecoder =
-    JD.map2 DetailsMessage
-        (JD.field "name" JD.string)
-        (JD.field "remote_id" JD.string)
-
-
-acceptMsgDecoder : JD.Decoder DetailsMessage
-acceptMsgDecoder =
-    detailsMsgDecoder
-
-
-
--- On message / deny
-
-
-textMsgDecoder : JD.Decoder TextMessage
-textMsgDecoder =
-    JD.map TextMessage
-        (JD.field "body" JD.string)
-
-
-denyMsgDecoder : JD.Decoder TextMessage
-denyMsgDecoder =
-    textMsgDecoder
-
-
-
 -- Subs
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.socket of
-        Nothing ->
-            Sub.none
-
-        Just phxSocket ->
-            Phoenix.Socket.listen phxSocket PhoenixMsg
-
-
-
-{- Join -}
-
-
-joinChannel : Model -> ( Model, Cmd Msg )
-joinChannel model =
-    case model.socket of
-        Nothing ->
-            model ! []
-
-        Just modelSocket ->
-            -- Join Channel from Channel ID in model
-            let
-                channel =
-                    Phoenix.Channel.init (model.channel_id)
-                        |> Phoenix.Channel.onJoin (always (JoinMessage model.channel_id))
-
-                ( socket, phxCmd ) =
-                    Phoenix.Socket.join channel modelSocket
-            in
-                ( { model | socket = Just socket }
-                , Cmd.map PhoenixMsg phxCmd
-                )
+    Sub.map Remote_ (R.subscriptions model)
 
 
 

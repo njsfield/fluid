@@ -245,12 +245,12 @@ sysInput =
 
 connectSocket : Cmd Msg
 connectSocket =
-    do (ConnectSocket)
+    do (Remote_ ConnectSocket)
 
 
 joinChannel : Cmd Msg
 joinChannel =
-    do (JoinChannel)
+    do (Remote_ JoinChannel)
 
 
 saveName : Name -> Cmd Msg
@@ -260,17 +260,17 @@ saveName name =
 
 sendRequest : Cmd Msg
 sendRequest =
-    do (SendRequest)
+    do (Remote_ SendRequest)
 
 
 sendAccept : Cmd Msg
 sendAccept =
-    do (SendAccept)
+    do (Remote_ SendAccept)
 
 
 sendDecline : Cmd Msg
 sendDecline =
-    do (SendDecline)
+    do (Remote_ SendDecline)
 
 
 setUrl : Url -> Cmd Msg
