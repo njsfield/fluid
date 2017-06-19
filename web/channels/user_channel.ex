@@ -72,9 +72,9 @@ defmodule Fluid.UserChannel do
   end
 
   # Msg
-  def handle_in("msg", %{"body" => body}, %{assigns: %{remote_id: remote_id}} = socket) do
+  def handle_in("message", %{"body" => body}, %{assigns: %{remote_id: remote_id}} = socket) do
     # Broadcast to user/remote (pass user_id from socket)
-    Endpoint.broadcast("user:#{remote_id}", "msg", %{
+    Endpoint.broadcast("user:#{remote_id}", "message", %{
       "body"    => body,
       "user_id" => socket.id
     })
@@ -102,7 +102,7 @@ defmodule Fluid.UserChannel do
 
 
 
-  intercept ["msg", "request", "accept", "deny", "leave"]
+  intercept ["message", "request", "accept", "deny", "leave"]
 
 
 
@@ -136,11 +136,11 @@ defmodule Fluid.UserChannel do
     {:noreply, assign(socket, :remote_id, nil)}
   end
 
-  # Msg
-  def handle_out("msg", %{"user_id" => user_id, "body" => body}, %{assigns: %{remote_id: remote_id}} = socket)
+  # Message
+  def handle_out("message", %{"user_id" => user_id, "body" => body}, %{assigns: %{remote_id: remote_id}} = socket)
     when user_id == remote_id do
     # Only push msg when User has matching remote_id stored in socket
-    push socket, "msg", %{"body" => body}
+    push socket, "message", %{"body" => body}
     {:noreply, socket}
   end
 

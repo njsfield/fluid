@@ -78,6 +78,14 @@ setTachs turn =
                 , emptyCol = "pl--black white b--black"
             }
 
+        Remote ->
+            { baseTachs
+                | restedBg = "bg-gray"
+                , typingBg = "bg-green"
+                , typeCol = "white b--white"
+                , emptyCol = "pl--black white b--black"
+            }
+
         _ ->
             baseTachs
 

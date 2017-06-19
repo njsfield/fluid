@@ -5,6 +5,7 @@ import Navigation
 import Storage
 import Route exposing (setEntryPoint, setUrlWithUserId)
 import Roles.User as U
+import Roles.Remote as R
 import Roles.System as S
 import Views.Chat
 import Phoenix.Socket
@@ -75,7 +76,7 @@ initSocket { socket_url, name, user_id, channel_id } =
             ++ user_id
         )
         |> Phoenix.Socket.withDebug
-        |> Phoenix.Socket.on "msg" channel_id ReceiveMessage
+        |> Phoenix.Socket.on "message" channel_id ReceiveMessage
         |> Phoenix.Socket.on "request" channel_id ReceiveRequest
         |> Phoenix.Socket.on "accept" channel_id ReceiveAccept
         |> Phoenix.Socket.on "decline" channel_id ReceiveDecline
@@ -111,7 +112,7 @@ update msg model =
             (userMsg == UserFinishedTyping)
                 ? (update Assess model)
                 =:= (U.update userMsg model
-                        |> Tuple.mapSecond (Cmd.map User_ >> (sendIfTyping userMsg))
+                        |> Tuple.mapSecond (Cmd.map User_ >> (sendIfTyping userMsg model))
                     )
 
         -- When System sends message
@@ -124,6 +125,16 @@ update msg model =
                         |> Tuple.mapSecond (Cmd.map System_)
                     )
 
+        -- When Remote sends message
+        -- Mainly for typing, if they send RemoteFinishedTyping
+        -- assess is called.
+        Remote_ remoteMsg ->
+            (remoteMsg == RemoteFinishedTyping)
+                ? (update Assess model)
+                =:= (R.update remoteMsg model
+                        |> Tuple.mapSecond (Cmd.map Remote_)
+                    )
+
         -- Called after URL change action
         UrlChange _ ->
             (update Assess model)
@@ -132,14 +143,11 @@ update msg model =
         SetUrl user_id ->
             model ! [ setUrlWithUserId user_id ]
 
-        -- SendMsg via socket
-        SendMsg str ->
-            -- Replace with state checking function before sending
-            Debug.log "Sent:" str
-                |> always (model ! [])
+        -- SendMessage
+        SendMessage str ->
+            sendMessage str model
 
-        -- SendRequest via socket
-        -- Give JSON object containing name & remote_id
+        -- SendRequest
         SendRequest ->
             sendRequest model
 
@@ -158,6 +166,18 @@ update msg model =
         -- On Accept
         ReceiveAccept msg ->
             receiveAccept msg model
+
+        -- On Decline
+        ReceiveDecline msg ->
+            receiveDecline msg model
+
+        -- On Leave
+        ReceiveLeave msg ->
+            receiveLeave msg model
+
+        -- On Message
+        ReceiveMessage msg ->
+            receiveMessage msg model
 
         -- JoinChannel
         JoinChannel ->
@@ -246,18 +266,23 @@ maybeStartFromWelcome maybeName model =
 
 
 
--- If User is typing, batch cmd with
+-- If User is typing & in chat, batch cmd with
 -- both cmd & SendMsg
 
 
-sendIfTyping : UserMsg -> Cmd Msg -> Cmd Msg
-sendIfTyping msg cmd =
+sendIfTyping : UserMsg -> Model -> Cmd Msg -> Cmd Msg
+sendIfTyping msg { stage } cmd =
+    -- Check if user is typing
     case msg of
-        UserType s ->
-            succeed (SendMsg s)
-                |> perform identity
-                |> flip (::) [ cmd ]
-                |> Cmd.batch
+        UserType str ->
+            -- Assert that user before firing send message cmd
+            if stage == InChat then
+                succeed (SendMessage str)
+                    |> perform identity
+                    |> flip (::) [ cmd ]
+                    |> Cmd.batch
+            else
+                cmd
 
         _ ->
             cmd
@@ -270,8 +295,8 @@ sendIfTyping msg cmd =
 -- Model, returns (Model, Cmd Msg)
 
 
-sendMessage : Subject -> JE.Value -> Model -> ( Model, Cmd Msg )
-sendMessage subject msg model =
+send : Subject -> JE.Value -> Model -> ( Model, Cmd Msg )
+send subject msg model =
     case model.socket of
         Nothing ->
             model ! []
@@ -305,7 +330,7 @@ sendDetails model subject =
                 ]
             )
     in
-        sendMessage subject msg model
+        send subject msg model
 
 
 
@@ -321,7 +346,7 @@ sendText model subject text =
                 [ ( "body", JE.string text ) ]
             )
     in
-        sendMessage subject msg model
+        send subject msg model
 
 
 sendRequest : Model -> ( Model, Cmd Msg )
@@ -339,6 +364,11 @@ sendDecline model =
     sendText model "decline" "No thanks"
 
 
+sendMessage : String -> Model -> ( Model, Cmd Msg )
+sendMessage str model =
+    sendText model "message" str
+
+
 
 -- Receive Request
 -- Save remote_id & remote_name temporarily
@@ -348,7 +378,7 @@ sendDecline model =
 
 receiveDetails : JE.Value -> Model -> Stage -> ( Model, Cmd Msg )
 receiveDetails raw model stage =
-    case JD.decodeValue requestMsgDecoder raw of
+    case JD.decodeValue detailsMsgDecoder raw of
         Ok msg ->
             { model
                 | remote_name = msg.name
@@ -358,7 +388,21 @@ receiveDetails raw model stage =
                 |> update (Assess)
 
         Err error ->
-            ( model, Cmd.none )
+            model ! []
+
+
+
+-- Send to Remote
+
+
+receiveText : JE.Value -> Model -> Stage -> ( Model, Cmd Msg )
+receiveText raw model stage =
+    case JD.decodeValue textMsgDecoder raw of
+        Ok { body } ->
+            update (Remote_ (RemoteType body)) model
+
+        Err error ->
+            model ! []
 
 
 
@@ -383,26 +427,57 @@ receiveAccept raw model =
 --- When Leave is received (ignore msg)
 
 
+receiveDecline : JE.Value -> Model -> ( Model, Cmd Msg )
+receiveDecline _ model =
+    { model | stage = SA_ReceiveDecline }
+        |> update (Assess)
+
+
+
+--- When Leave is received (ignore msg)
+
+
 receiveLeave : JE.Value -> Model -> ( Model, Cmd Msg )
 receiveLeave _ model =
     { model | stage = SA_ReceiveLeave }
         |> update (Assess)
 
 
+receiveMessage : JE.Value -> Model -> ( Model, Cmd Msg )
+receiveMessage raw model =
+    receiveText raw model InChat
+
+
 
 -- Decoders
+-- On Details
 
 
-requestMsgDecoder : JD.Decoder RequestMessage
-requestMsgDecoder =
-    JD.map2 RequestMessage
+detailsMsgDecoder : JD.Decoder DetailsMessage
+detailsMsgDecoder =
+    JD.map2 DetailsMessage
         (JD.field "name" JD.string)
         (JD.field "remote_id" JD.string)
 
 
-acceptMsgDecoder : JD.Decoder RequestMessage
+acceptMsgDecoder : JD.Decoder DetailsMessage
 acceptMsgDecoder =
-    requestMsgDecoder
+    detailsMsgDecoder
+
+
+
+-- On message / decline
+
+
+textMsgDecoder : JD.Decoder TextMessage
+textMsgDecoder =
+    JD.map TextMessage
+        (JD.field "body" JD.string)
+
+
+declineMsgDecoder : JD.Decoder TextMessage
+declineMsgDecoder =
+    textMsgDecoder
 
 
 

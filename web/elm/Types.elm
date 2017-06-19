@@ -15,12 +15,21 @@ type alias Flags =
 
 
 
--- Reqest Msg helper
+-- Details Msg
 
 
-type alias RequestMessage =
+type alias DetailsMessage =
     { name : String
     , remote_id : String
+    }
+
+
+
+-- Text Msg
+
+
+type alias TextMessage =
+    { body : String
     }
 
 
@@ -137,6 +146,7 @@ type Stage
 type Msg
     = User_ UserMsg
     | System_ SystemMsg
+    | Remote_ RemoteMsg
     | UrlChange Navigation.Location
     | SetUrl Url
     | Assess
@@ -148,6 +158,7 @@ type Msg
     | SendRequest
     | SendAccept
     | SendDecline
+    | SendMessage String
     | ReceiveRequest JE.Value
     | ReceiveAccept JE.Value
     | ReceiveDecline JE.Value
@@ -174,3 +185,13 @@ type UserMsg
     = UserType Val
     | UserTypeBounced String
     | UserFinishedTyping
+
+
+
+-- Remote Msg
+
+
+type RemoteMsg
+    = RemoteType Val
+    | RemoteTypeBounced String
+    | RemoteFinishedTyping

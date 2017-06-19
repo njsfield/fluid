@@ -74,6 +74,16 @@ setPlaceholderNoVal model stage placeholder =
     { model
         | val = ""
         , placeholder = placeholder
+        , turn = Open
+        , stage = stage
+    }
+
+
+setPlaceholder : Model -> Stage -> String -> Model
+setPlaceholder model stage placeholder =
+    { model
+        | placeholder = placeholder
+        , turn = Open
         , stage = stage
     }
 
@@ -94,7 +104,12 @@ fullReset model stage =
 
 chatPlaceholder : Model -> Model
 chatPlaceholder model =
-    setPlaceholderNoVal model Idle ("Now chatting with " ++ model.name)
+    setPlaceholderNoVal model InChat ("Now chatting with " ++ model.name)
+
+
+inChat : Model -> Model
+inChat model =
+    setPlaceholder model InChat model.placeholder
 
 
 
@@ -197,6 +212,9 @@ assess model =
         -- 18 After typing leave
         ST_ReceiveLeave ->
             fullReset model SA_SetUrl ! [ setUrl model.user_id ]
+
+        InChat ->
+            inChat model ! []
 
         _ ->
             model ! []
