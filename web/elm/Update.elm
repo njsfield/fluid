@@ -77,6 +77,9 @@ initSocket { socket_url, name, user_id, channel_id } =
         |> Phoenix.Socket.withDebug
         |> Phoenix.Socket.on "msg" channel_id ReceiveMessage
         |> Phoenix.Socket.on "request" channel_id ReceiveRequest
+        |> Phoenix.Socket.on "accept" channel_id ReceiveAccept
+        |> Phoenix.Socket.on "decline" channel_id ReceiveDecline
+        |> Phoenix.Socket.on "leave" channel_id ReceiveLeave
 
 
 
@@ -143,6 +146,10 @@ update msg model =
         -- On Receive socket
         ReceiveRequest msg ->
             receiveRequest msg model
+
+        -- On Accept
+        ReceiveAccept msg ->
+            receiveAccept msg model
 
         -- JoinChannel
         JoinChannel ->
@@ -276,11 +283,12 @@ sendMessage subject msg model =
 
 
 
--- send Request Helper
+-- send details (name & remote_id)
+-- Accepts model and a string subject, e.g. ('request', 'accept')
 
 
-sendRequest : Model -> ( Model, Cmd Msg )
-sendRequest model =
+sendDetails : Model -> String -> ( Model, Cmd Msg )
+sendDetails model subject =
     let
         msg =
             (JE.object
@@ -289,28 +297,88 @@ sendRequest model =
                 ]
             )
     in
-        sendMessage "request" msg model
+        sendMessage subject msg model
+
+
+
+-- send text (with body key)
+-- Accepts model, subject and text.
+
+
+sendText : Model -> String -> String -> ( Model, Cmd Msg )
+sendText model subject text =
+    let
+        msg =
+            (JE.object
+                [ ( "body", JE.string text ) ]
+            )
+    in
+        sendMessage subject msg model
+
+
+sendRequest : Model -> ( Model, Cmd Msg )
+sendRequest model =
+    sendDetails model "request"
+
+
+sendAccept : Model -> ( Model, Cmd Msg )
+sendAccept model =
+    sendDetails model "accept"
+
+
+sendDecline : Model -> ( Model, Cmd Msg )
+sendDecline model =
+    sendText model "decline" "No thanks"
 
 
 
 -- Receive Request
 -- Save remote_id & remote_name temporarily
--- Call SA_ReceiveRequest
+-- Set Stage
+-- Then assess
 
 
-receiveRequest : JE.Value -> Model -> ( Model, Cmd Msg )
-receiveRequest raw model =
+receiveDetails : JE.Value -> Model -> Stage -> ( Model, Cmd Msg )
+receiveDetails raw model stage =
     case JD.decodeValue requestMsgDecoder raw of
         Ok msg ->
             { model
                 | remote_name = msg.name
                 , remote_id = msg.remote_id
-                , stage = SA_ReceiveRequest
+                , stage = stage
             }
                 |> update (Assess)
 
         Err error ->
             ( model, Cmd.none )
+
+
+
+-- When Request is received
+
+
+receiveRequest : JE.Value -> Model -> ( Model, Cmd Msg )
+receiveRequest raw model =
+    receiveDetails raw model SA_ReceiveRequest
+
+
+
+-- When Accept is received
+
+
+receiveAccept : JE.Value -> Model -> ( Model, Cmd Msg )
+receiveAccept raw model =
+    receiveDetails raw model SA_ReceiveAccept
+
+
+
+--- When Leave is received (ignore msg)
+
+
+receiveLeave : JE.Value -> Model -> ( Model, Cmd Msg )
+receiveLeave _ model =
+    { model | stage = SA_ReceiveLeave }
+        |> update (Assess)
 
 
 

@@ -101,19 +101,60 @@ assess model =
 
         -- 14. After User responds
         UT_UserResponse ->
-            case (String.left 1 model.val) of
+            case (String.left 1 model.val |> String.toUpper) of
                 "Y" ->
-                    { model | val = "", stage = SA_SendAccept } ! []
-
-                "N" ->
-                    model ! []
+                    { model | val = "", stage = SA_SendAccept } ! [ sendAccept ]
 
                 _ ->
-                    model ! []
+                    { model
+                        | val = ""
+                        , stage = SA_SendDecline
+                        , remote_id = ""
+                        , remote_name = ""
+                    }
+                        ! [ sendDecline ]
 
-        -- 10. Join
-        -- SA_JoinChannel ->
-        --     model ! []
+        -- 15.a After receiving accept
+        SA_ReceiveAccept ->
+            { model | val = "", stage = ST_ReceiveAccept } ! [ sysInput ]
+
+        -- 16a. After typing receive accept
+        ST_ReceiveAccept ->
+            { model
+                | val = ""
+                , placeholder = ("You are now chatting with " ++ model.remote_name)
+                , stage = InChat
+            }
+                ! []
+
+        -- 15.b After receiving decline
+        SA_ReceiveDecline ->
+            { model | val = "", stage = ST_ReceiveDecline } ! [ sysInput ]
+
+        -- 16.b Reset back to set URL
+        ST_ReceiveDecline ->
+            { model
+                | val = ""
+                , placeholder = ""
+                , remote_id = ""
+                , stage = SA_SetUrl
+            }
+                ! [ setUrl model.user_id ]
+
+        -- 17 After receiving leave
+        SA_ReceiveLeave ->
+            { model | val = "", stage = ST_ReceiveLeave } ! [ sysInput ]
+
+        -- 18 After typing leave
+        ST_ReceiveLeave ->
+            { model
+                | val = ""
+                , placeholder = ""
+                , remote_id = ""
+                , stage = SA_SetUrl
+            }
+                ! [ setUrl model.user_id ]
+
         _ ->
             model ! []
 
@@ -145,6 +186,16 @@ saveName name =
 sendRequest : Cmd Msg
 sendRequest =
     do (SendRequest)
+
+
+sendAccept : Cmd Msg
+sendAccept =
+    do (SendAccept)
+
+
+sendDecline : Cmd Msg
+sendDecline =
+    do (SendDecline)
 
 
 setUrl : Url -> Cmd Msg

@@ -119,6 +119,13 @@ type Stage
     | ST_ReceiveRequest
     | UT_UserResponse
     | SA_SendAccept
+    | SA_SendDecline
+    | SA_ReceiveAccept
+    | ST_ReceiveAccept
+    | SA_ReceiveDecline
+    | ST_ReceiveDecline
+    | SA_ReceiveLeave
+    | ST_ReceiveLeave
     | Idle
     | InChat
 
@@ -139,6 +146,8 @@ type Msg
     | JoinChannel
     | JoinMessage String
     | SendRequest
+    | SendAccept
+    | SendDecline
     | ReceiveRequest JE.Value
     | ReceiveAccept JE.Value
     | ReceiveDecline JE.Value

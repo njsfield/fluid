@@ -20,7 +20,7 @@ mapStageToStatement stage { name, remote_name } =
 
         ST_Welcome ->
             "Welcome ##."
-                |> replace All (regex "##") (\_ -> noStop name)
+                |> replaceHashes name
 
         ST_ConnectSocket ->
             "Connecting to server..."
@@ -30,10 +30,26 @@ mapStageToStatement stage { name, remote_name } =
 
         ST_ReceiveRequest ->
             "## would like to chat. Allow? Type 'Y' for yes, 'N' for no."
-                |> replace All (regex "##") (\_ -> remote_name)
+                |> replaceHashes remote_name
+
+        ST_ReceiveAccept ->
+            "## has accepted! You're now talking to them"
+                |> replaceHashes remote_name
+
+        ST_ReceiveDecline ->
+            "They've declined. Sorry"
+
+        ST_ReceiveLeave ->
+            "## has left."
+                |> replaceHashes remote_name
 
         _ ->
             ""
+
+
+replaceHashes : Name -> String -> String
+replaceHashes name string =
+    replace All (regex "##") (\_ -> name) string
 
 
 
