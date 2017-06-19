@@ -107,6 +107,24 @@ chatPlaceholder model =
     setPlaceholderNoVal model InChat ("Now chatting with " ++ model.name)
 
 
+sharePlaceholder : Model -> Model
+sharePlaceholder model =
+    let
+        new_model =
+            setPlaceholderNoVal model Idle "Please share this URL"
+    in
+        { new_model | entry = Creating }
+
+
+requestPlaceholder : Model -> Model
+requestPlaceholder model =
+    setPlaceholderNoVal model Idle "Sending request to remote..."
+
+
+
+-- In Chat
+
+
 inChat : Model -> Model
 inChat model =
     setPlaceholder model InChat model.placeholder
@@ -148,10 +166,9 @@ assess model =
 
         -- 7. After welcome, set Url (if creating)
         ST_Welcome ->
-            if (model.entry == Creating) then
-                setStageNoVal model SA_SetUrl ! [ setUrl model.user_id ]
-            else
-                setStageNoVal model ST_ConnectSocket ! [ sysInput ]
+            (model.entry == Creating)
+                ? (setStageNoVal model SA_SetUrl ! [ setUrl model.user_id ])
+                =:= (setStageNoVal model ST_ConnectSocket ! [ sysInput ])
 
         -- 8 (a.1) After setting URL
         SA_SetUrl ->
@@ -167,12 +184,9 @@ assess model =
 
         -- 11. After Join
         SA_JoinChannel ->
-            if (model.entry == Creating) then
-                -- Display Share URL
-                setPlaceholderNoVal model Idle "Please share this URL" ! []
-            else
-                -- Display Send Request
-                setPlaceholderNoVal model Idle "Sending request to remote" ! [ sendRequest ]
+            (model.entry == Creating)
+                ? (sharePlaceholder model ! [])
+                =:= (requestPlaceholder model ! [ sendRequest ])
 
         -- 12.a User Receives Request
         SA_ReceiveRequest ->
@@ -184,10 +198,10 @@ assess model =
 
         -- 14. After User responds
         UT_UserResponse ->
-            if (firstIsY model.val) then
-                chatPlaceholder model ! [ sendAccept ]
-            else
-                fullReset model SA_SendDecline ! [ sendDecline ]
+            -- Have they typed Yes?
+            (firstIsY model.val)
+                ? (chatPlaceholder model ! [ sendAccept ])
+                =:= (sharePlaceholder model ! [ sendDecline ])
 
         -- 15.a After receiving accept
         SA_ReceiveAccept ->
@@ -203,7 +217,7 @@ assess model =
 
         -- 16.b Reset back to set URL
         ST_ReceiveDecline ->
-            fullReset model SA_SetUrl ! [ setUrl model.user_id ]
+            sharePlaceholder model ! [ setUrl model.user_id ]
 
         -- 17 After receiving leave
         SA_ReceiveLeave ->

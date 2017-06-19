@@ -63,7 +63,7 @@ defmodule Fluid.UserChannel do
   end
 
   # Deny
-  def handle_in("deny", %{"remote_id" => remote_id}, socket) do
+  def handle_in("deny", %{"remote_id" => remote_id} = _msg, socket) do
     # Broadcast to remote
     Endpoint.broadcast("user:#{remote_id}", "deny", %{
       "body"    => "User has denied to connect"

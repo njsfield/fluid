@@ -79,7 +79,7 @@ initSocket { socket_url, name, user_id, channel_id } =
         |> Phoenix.Socket.on "message" channel_id ReceiveMessage
         |> Phoenix.Socket.on "request" channel_id ReceiveRequest
         |> Phoenix.Socket.on "accept" channel_id ReceiveAccept
-        |> Phoenix.Socket.on "decline" channel_id ReceiveDecline
+        |> Phoenix.Socket.on "deny" channel_id ReceiveDecline
         |> Phoenix.Socket.on "leave" channel_id ReceiveLeave
 
 
@@ -361,7 +361,7 @@ sendAccept model =
 
 sendDecline : Model -> ( Model, Cmd Msg )
 sendDecline model =
-    sendText model "decline" "No thanks"
+    sendDetails model "deny"
 
 
 sendMessage : String -> Model -> ( Model, Cmd Msg )
@@ -466,7 +466,7 @@ acceptMsgDecoder =
 
 
 
--- On message / decline
+-- On message / deny
 
 
 textMsgDecoder : JD.Decoder TextMessage
@@ -475,8 +475,8 @@ textMsgDecoder =
         (JD.field "body" JD.string)
 
 
-declineMsgDecoder : JD.Decoder TextMessage
-declineMsgDecoder =
+denyMsgDecoder : JD.Decoder TextMessage
+denyMsgDecoder =
     textMsgDecoder
 
 
