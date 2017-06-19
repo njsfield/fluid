@@ -14,6 +14,7 @@ import Json.Encode as JE
 import Json.Decode as JD
 import Types exposing (..)
 import Util exposing (..)
+import Assess exposing (..)
 import Task exposing (succeed, perform, attempt)
 
 
@@ -92,6 +93,10 @@ update msg model =
         LoadName maybeName ->
             maybeStartFromWelcome maybeName model
 
+        -- Called Via assess
+        SaveName name ->
+            model ! [ saveNameToStorage name ]
+
         -- When User sends message
         -- Mainly for typing, if they send UserFinishedTyping
         -- assess is called.
@@ -116,6 +121,9 @@ update msg model =
         -- Called after URL change action
         UrlChange _ ->
             (update Assess model)
+
+        SetUrl url ->
+            model ! [ setUrlWithUserID url ]
 
         -- SendMsg via socket
         SendMsg str ->
@@ -189,7 +197,7 @@ getNameFromStorage =
 
 
 
--- Save name, call Assess after
+-- save Name to Storage
 
 
 saveNameToStorage : Name -> Cmd Msg
@@ -217,98 +225,6 @@ maybeStartFromWelcome maybeName model =
 
         Nothing ->
             update (Assess) model
-
-
-
-{-
-   Main Assess
-   Toggles through next state
-   depending on state
--}
-
-
-assess : Model -> ( Model, Cmd Msg )
-assess model =
-    -- First check state
-    case model.state of
-        -- 1. System type initialise
-        SystemType_Initialize ->
-            { model | state = SystemType_Introduction } ! [ sysInput ]
-
-        -- 2. System type introduction
-        SystemType_Introduction ->
-            { model | val = "", state = SystemType_NamePrompt } ! [ sysInput ]
-
-        -- 3. After system asked for name
-        SystemType_NamePrompt ->
-            { model | val = "", state = UserType_Name } ! []
-
-        -- 4. After user has typed name (if valid) then send name
-        UserType_Name ->
-            (isValidSystemReply model.val)
-                ? ({ model | state = SystemAction_SaveName } ! [ saveNameToStorage (noStop model.val) ])
-                =:= (model ! [])
-
-        -- 5 (a). System should type Welcome after saving
-        SystemAction_SaveName ->
-            { model | val = "", name = model.val, state = SystemType_Welcome } ! [ sysInput ]
-
-        -- 6 (b). System should type Welcome after loading
-        SystemAction_LoadName ->
-            { model | name = model.val, state = SystemType_Welcome } ! [ sysInput ]
-
-        -- 7. After welcome, set Url (if remote_id not present)
-        SystemType_Welcome ->
-            if (String.isEmpty model.remote_id) then
-                { model | val = "", state = SystemAction_SetUrl } ! [ setUrlWithUserID model.user_id ]
-            else
-                { model | val = "", state = SystemType_ConnectSocket } ! [ sysInput ]
-
-        -- 8 (a.1) After setting URL
-        SystemAction_SetUrl ->
-            { model | state = SystemType_SetUrl } ! [ sysInput ]
-
-        -- 8 (a. 2) After explanation. Type connect
-        SystemType_SetUrl ->
-            { model | val = "", state = SystemType_ConnectSocket } ! [ sysInput ]
-
-        -- 9. Perform Connect
-        SystemType_ConnectSocket ->
-            { model | state = SystemAction_ConnectSocket } ! [ connectSocket ]
-
-        -- 9. Connect
-        SystemAction_JoinChannel ->
-            -- TODO: Check if remote in Joining/Creating
-            { model | val = "", placeholder = "Please share this URL", state = User_Idle } ! [ joinChannel ]
-
-        -- 10. Join
-        -- SystemAction_JoinChannel ->
-        --     model ! []
-        _ ->
-            model ! []
-
-
-
--- Prompt System to Start Typing
-
-
-sysInput : Cmd Msg
-sysInput =
-    do (System_ SystemType)
-
-
-
--- Connect
-
-
-connectSocket : Cmd Msg
-connectSocket =
-    do (ConnectSocket)
-
-
-joinChannel : Cmd Msg
-joinChannel =
-    do (JoinChannel)
 
 
 

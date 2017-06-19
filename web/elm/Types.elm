@@ -108,9 +108,11 @@ type Msg
     = User_ UserMsg
     | System_ SystemMsg
     | UrlChange Navigation.Location
+    | SetUrl Url
     | Assess
     | SendMsg Val
     | LoadName (Maybe Val)
+    | SaveName Val
     | JoinChannel
     | ReceiveMessage JE.Value
     | ConnectSocket
