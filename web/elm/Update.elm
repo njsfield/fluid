@@ -75,7 +75,6 @@ initSocket { socket_url, name, user_id, channel_id } =
             ++ "&user_id="
             ++ user_id
         )
-        |> Phoenix.Socket.withDebug
         |> Phoenix.Socket.on "message" channel_id ReceiveMessage
         |> Phoenix.Socket.on "request" channel_id ReceiveRequest
         |> Phoenix.Socket.on "accept" channel_id ReceiveAccept
