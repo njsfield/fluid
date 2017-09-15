@@ -23,21 +23,18 @@ mapStageToStatement stage { name, remote_name } =
                 |> replaceHashes name
 
         ST_ConnectSocket ->
-            "Connecting to server..."
-
-        ST_SendRequest ->
-            "Sending request to remote..."
+            "Connecting"
 
         ST_ReceiveRequest ->
-            "## would like to chat. Allow? Type 'Y' for yes, 'N' for no."
+            "## would like to chat. Allow? [Y/n]"
                 |> replaceHashes remote_name
 
         ST_ReceiveAccept ->
-            "## has accepted! You're now talking to them"
+            "## has accepted! Now in chat"
                 |> replaceHashes remote_name
 
         ST_ReceiveDecline ->
-            "They've declined. Sorry"
+            "Unable to connect."
 
         ST_ReceiveLeave ->
             "## has left."

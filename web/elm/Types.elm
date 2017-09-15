@@ -91,7 +91,7 @@ type alias Model =
     , turn : Role
     , placeholder : String
     , stage : Stage
-    , socket : Maybe (Phoenix.Socket.Socket Msg)
+    , socket : Maybe (Phoenix.Socket.Socket RemoteMsg)
     , socket_url : String
     , entry : Entry
     }
@@ -150,22 +150,8 @@ type Msg
     | UrlChange Navigation.Location
     | SetUrl Url
     | Assess
-    | SendMsg Val
     | LoadName (Maybe Val)
     | SaveName Val
-    | JoinChannel
-    | JoinMessage String
-    | SendRequest
-    | SendAccept
-    | SendDecline
-    | SendMessage String
-    | ReceiveRequest JE.Value
-    | ReceiveAccept JE.Value
-    | ReceiveDecline JE.Value
-    | ReceiveLeave JE.Value
-    | ReceiveMessage JE.Value
-    | ConnectSocket
-    | PhoenixMsg (Phoenix.Socket.Msg Msg)
 
 
 
@@ -194,4 +180,17 @@ type UserMsg
 type RemoteMsg
     = RemoteType Val
     | RemoteTypeBounced String
-    | RemoteFinishedTyping
+    | RemoteComplete
+    | JoinChannel
+    | JoinMessage String
+    | SendRequest
+    | SendAccept
+    | SendDecline
+    | SendMessage String
+    | ReceiveRequest JE.Value
+    | ReceiveAccept JE.Value
+    | ReceiveDecline JE.Value
+    | ReceiveLeave JE.Value
+    | ReceiveMessage JE.Value
+    | ConnectSocket
+    | PhoenixMsg (Phoenix.Socket.Msg RemoteMsg)
