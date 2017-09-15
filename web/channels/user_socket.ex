@@ -5,9 +5,9 @@ defmodule Fluid.UserSocket do
   channel "user:*", Fluid.UserChannel
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket
-
-  # Connect 
+  transport :websocket, Phoenix.Transports.WebSocket,
+    timeout: 45_000
+  # Connect
   # Each socket provides name & ID (from token)
   # Then params are assigned to socket
   # An additional remote_id is first assigned initially as 'nil'
@@ -22,7 +22,7 @@ defmodule Fluid.UserSocket do
 
   def connect(_params, _socket) do
     :error
-    
+
   end
 
   # Assign User ID as ID
