@@ -31,10 +31,14 @@ setEntryPoint location model =
 -- Makes Cmd to modify URL with Hash of user_id
 
 
-setUrlWithUserId : String -> Cmd Msg
-setUrlWithUserId user_id =
+buildUrl : String -> String
+buildUrl user_id =
     "/#"
         ++ urlHash
         ++ "/"
         ++ user_id
-        |> Navigation.modifyUrl
+
+
+setUrlWithUserId : String -> Cmd Msg
+setUrlWithUserId =
+    buildUrl >> Navigation.modifyUrl
