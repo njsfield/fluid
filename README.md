@@ -1,20 +1,38 @@
 # Fluid
 
-To start your Phoenix app:
+![screenshot](./screenshot.png)
+
+Fluid is a real-time, one-to-one, text-based chat application.
+'Real-time' means you'll see what the other user is typing when they message you,
+and visa-versa.
+
+The enter application is presented as a single input box in the center of the browser,
+and prompts from the application are literally typed into that box.
+
+The user can initiate a chat with another remote user by sharing a unique URL. The application
+will prompt the user if they're happy to chat with the remote user before allowing messages to
+flow between the two users.
+
+# Technologies Used
+
+- Elm
+- Elixir & Phoenix
+- Web Sockets
+
+# Install Locally
+
+To start the Phoenix app:
 
   * Install dependencies with `mix deps.get`
-  * Create and migrate your database with `mix ecto.create && mix ecto.migrate`
+  * Create and migrate with `mix ecto.create && mix ecto.migrate`
   * Install Node.js dependencies with `npm install`
   * Start Phoenix endpoint with `mix phoenix.server`
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+# Demo
 
-Ready to run in production? Please [check our deployment guides](http://www.phoenixframework.org/docs/deployment).
+Live demo is available [here](https://fluid-chat.herokuapp.com/), however if running
+locally you can visit `localhost:4000` in your browser.
 
-## Learn more
-
-  * Official website: http://www.phoenixframework.org/
-  * Guides: http://phoenixframework.org/docs/overview
-  * Docs: https://hexdocs.pm/phoenix
-  * Mailing list: http://groups.google.com/group/phoenix-talk
-  * Source: https://github.com/phoenixframework/phoenix
+You will be prompted to enter your name (followed by '.'), and then given a new URL
+to share with. After you share the url and the remote user enters their name, you'll
+be able to chat to them in real time.
