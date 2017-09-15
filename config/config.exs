@@ -24,7 +24,7 @@ config :logger, :console,
 
 # Set socket vars
 config :fluid, Fluid.Endpoint,
-  [socket_url: "wss://my-app.herokuapp.com/socket/websocket"]
+  [socket_url: System.get_env("SOCKET_URL") || "ws://localhost:4000/socket/websocket"]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
