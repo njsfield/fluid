@@ -14,7 +14,7 @@ use Mix.Config
 config :fluid, Fluid.Endpoint,
   load_from_system_env: true,
   http: [port: {:system, "PORT"}],
-  url: [scheme: "https", host: "aqueous-island-51850.herokuapp.com", port: 443],
+  url: [scheme: "http", host: "aqueous-island-51850.herokuapp.com", port: 443],
     force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/manifest.json",
   secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE")
