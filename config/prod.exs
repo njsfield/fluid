@@ -13,7 +13,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :fluid, Fluid.Endpoint,
   load_from_system_env: true,
-  # http: [port: {:system, "PORT"}],
+  http: [port: {:system, "PORT"}],
   url: [scheme: "https", host: "aqueous-island-51850.herokuapp.com", port: 443],
     force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/manifest.json",
