@@ -7,17 +7,16 @@ import Test.Runner.Node exposing (run, TestProgram)
 import Json.Encode exposing (Value)
 
 
-all : Test
-all =
-    describe "All tests"
-        [ Route.all
-        , Util.all
-        ]
+-- Run all of our tests
 
 
 main : TestProgram
 main =
-    run emit all
+    run emit <|
+        Test.concat
+            [ Route.all
+            , Util.all
+            ]
 
 
 port emit : ( String, Value ) -> Cmd msg

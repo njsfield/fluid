@@ -23,25 +23,37 @@ baseLocation =
     }
 
 
+setEntryPointTests : Test
+setEntryPointTests =
+    describe "setEntryPoint"
+        [ test "Success (extracts correct hash string)" <|
+            \() ->
+                setEntryPoint { baseLocation | hash = "#/remote_id/eghgiehosfFF" } baseModel
+                    |> .remote_id
+                    |> Expect.equal "eghgiehosfFF"
+        , test "Fail" <|
+            \() ->
+                setEntryPoint { baseLocation | hash = "cat" } baseModel
+                    |> .remote_id
+                    |> Expect.equal ""
+        ]
+
+
+setUrlWithUserIdTests : Test
+setUrlWithUserIdTests =
+    describe "setUrlWithUserId"
+        [ test "Success" <|
+            \() ->
+                buildUrl "John"
+                    |> Expect.equal ("/#" ++ urlHash ++ "/John")
+        ]
+
+
 all : Test
 all =
-    describe "Route tests"
-        [ describe "setEntryPoint"
-            [ test "Success (extracts correct hash string)" <|
-                \() ->
-                    setEntryPoint { baseLocation | hash = "#/remote_id/eghgiehosfFF" } baseModel
-                        |> .remote_id
-                        |> Expect.equal "eghgiehosfFF"
-            , test "Fail" <|
-                \() ->
-                    setEntryPoint { baseLocation | hash = "cat" } baseModel
-                        |> .remote_id
-                        |> Expect.equal ""
-            ]
-        , describe "setUrlWithUserId"
-            [ test "Success" <|
-                \() ->
-                    buildUrl "John"
-                        |> Expect.equal ("/#" ++ urlHash ++ "/John")
+    describe "Util tests" <|
+        [ Test.concat
+            [ setEntryPointTests
+            , setUrlWithUserIdTests
             ]
         ]

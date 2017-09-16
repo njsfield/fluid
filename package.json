@@ -6,7 +6,8 @@
     "watch": "brunch watch --stdin",
     "debug": "DEBUG=true brunch watch --stdin",
     "test": "npm run test.elm",
-    "test.elm": "cd ./web/tests && elm-test Tests.elm"
+    "test.elm": "cd ./web/tests && elm-test Tests.elm",
+    "test.elm.watch": "npm run test.elm -- --watch"
   },
   "dependencies": {
     "elm": "^0.18.0",

@@ -23,13 +23,8 @@ infixl 1 ??
 
 
 (=:=) : Maybe a -> a -> a
-(=:=) l r =
-    case l of
-        Just l ->
-            l
-
-        _ ->
-            r
+(=:=) =
+    flip Maybe.withDefault
 infixl 0 =:=
 
 
@@ -72,12 +67,15 @@ isValidSystemReply val =
         |> String.split " "
         |> List.head
         |> Maybe.withDefault ""
-        |> contains (regex "\\w\\.")
+        |> contains (regex "[^\\s\\n]*\\.")
 
 
 noStop : String -> String
 noStop str =
-    (String.right 1 str == ".") ? (String.dropRight 1 str) =:= str
+    if (String.right 1 str == ".") then
+        (noStop (String.dropRight 1 str))
+    else
+        str
 
 
 
