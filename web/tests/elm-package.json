@@ -4,8 +4,8 @@
     "repository": "https://github.com/user/project.git",
     "license": "BSD-3-Clause",
     "source-directories": [
-        "./assets/elm",
-        "../web/elm"
+        ".",
+        "../elm"
     ],
     "exposed-modules": [],
     "native-modules": true,

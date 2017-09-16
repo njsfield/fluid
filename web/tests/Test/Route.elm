@@ -1,12 +1,10 @@
 module Test.Route exposing (..)
 
-import Navigation exposing (..)
 import Test.Helpers exposing (baseModel)
+import Navigation exposing (..)
 import Route exposing (setEntryPoint, buildUrl, urlHash)
 import Test exposing (..)
 import Expect
-import Fuzz exposing (list, int, tuple, string)
-import String
 
 
 baseLocation : Location
