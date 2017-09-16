@@ -26,7 +26,14 @@ To start the Phoenix app:
   * Install dependencies with `mix deps.get`
   * Create and migrate with `mix ecto.create && mix ecto.migrate`
   * Install Node.js dependencies with `npm install`
+  * Install Elm dependencies with `elm-package install`
   * Start Phoenix endpoint with `mix phoenix.server`
+
+# Test
+
+To run all tests;
+  * Install test dependencies by running `npm run test.install`
+  * Run `npm run test`
 
 # Demo
 

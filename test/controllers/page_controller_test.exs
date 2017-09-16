@@ -5,6 +5,5 @@ defmodule Fluid.PageControllerTest do
     conn = get conn, "/"
     conn.assigns
     assert Map.has_key?(conn.assigns, :user_id)
-    assert Map.has_key?(conn.assigns, :user_token)
   end
 end

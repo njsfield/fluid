@@ -5,7 +5,8 @@
     "deploy": "brunch build --production",
     "watch": "brunch watch --stdin",
     "debug": "DEBUG=true brunch watch --stdin",
-    "test": "npm run test.elm",
+    "test": "mix test && npm run test.elm",
+    "test.install": "cd ./web/tests && elm-package install",
     "test.elm": "cd ./web/tests && elm-test Tests.elm",
     "test.elm.watch": "npm run test.elm -- --watch"
   },
