@@ -1,4 +1,4 @@
-module Views.Chat exposing (view)
+module Views.Chat exposing (..)
 
 import Html exposing (Html, div, input, text)
 import Html.Attributes exposing (class, value, placeholder, style, autofocus)
@@ -25,7 +25,7 @@ type alias Tachs =
 
 
 
--- baseTachs
+-- All Tach models
 
 
 baseTachs : Tachs
@@ -36,6 +36,30 @@ baseTachs =
     , typeCol = "dark-gray b--dark-gray"
     , restCol = "0-30"
     , emptyCol = "pl--grey black b--black"
+    }
+
+
+userTachs : Tachs
+userTachs =
+    { baseTachs
+        | typingBg = "bg-light-blue"
+        , emptyCol = "pl--black white b--black"
+    }
+
+
+remoteTachs : Tachs
+remoteTachs =
+    { baseTachs
+        | typingBg = "bg-light-green"
+        , emptyCol = "pl--black white b--black"
+    }
+
+
+systemTachs : Tachs
+systemTachs =
+    { baseTachs
+        | typingBg = "bg-moon-gray"
+        , emptyCol = "pl--black white b--black"
     }
 
 
@@ -69,22 +93,13 @@ setTachs : Role -> Tachs
 setTachs turn =
     case turn of
         User ->
-            { baseTachs
-                | typingBg = "bg-light-blue"
-                , emptyCol = "pl--black white b--black"
-            }
+            userTachs
 
         Remote ->
-            { baseTachs
-                | typingBg = "bg-light-green"
-                , emptyCol = "pl--black white b--black"
-            }
+            remoteTachs
 
         System ->
-            { baseTachs
-                | typingBg = "bg-moon-gray"
-                , emptyCol = "pl--black white b--black"
-            }
+            systemTachs
 
         _ ->
             baseTachs
